@@ -2,9 +2,7 @@ return {
   "lervag/vimtex",
   init = function()
     -- Viewer settings
-    vim.g.vimtex_view_method = 'sioyek'            -- Sioyek PDF viewer for academic documents
-    -- Note: Not setting vimtex_view_sioyek_options allows VimTeX to handle window management
-    -- It will open new windows when needed but reuse for the same document
+    vim.g.vimtex_view_method = 'zathura'           -- Zathura PDF viewer (Wayland-compatible)
     vim.g.vimtex_context_pdf_viewer = 'okular'     -- External PDF viewer for the Vimtex menu
 
     -- Formatting settings
@@ -47,6 +45,7 @@ return {
     }
 
     -- Other settings
+    vim.g.vimtex_view_automatic = 1               -- Auto-open viewer after successful compile
     vim.g.vimtex_mappings_enabled = false          -- Disable default mappings
     vim.g.tex_flavor = 'latex'                     -- Set file type for TeX files
   end,
