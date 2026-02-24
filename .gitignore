@@ -1,1 +1,24 @@
 **/.return-meta.json
+
+# Secrets and credentials
+.ssh/
+*.key
+*.pem
+*_token
+credentials.json
+secrets/
+
+# Personal configuration
+local_config.lua
+personal_settings.lua
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Editor artifacts
+*.swp
+*.swo
+*~
+
+.gitignore
