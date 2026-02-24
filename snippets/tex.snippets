@@ -436,7 +436,49 @@ snippet example "Example" bi
 		${0:${VISUAL}}
 	\end{example}
 
+# ==============================================================================
+# HOMOLOGICAL ALGEBRA - COMMUTATIVE DIAGRAMS (tikzcd)
+# ==============================================================================
 
+snippet tikzcd "Commutative diagram (tikzcd)" b
+	\[\begin{tikzcd}
+		${1:•} \arrow[r, "${2:f}"] \arrow[d, "${3:g}"'] & ${4:•} \arrow[d, "${5:h}"] \\
+		${6:•} \arrow[r, "${7:k}"']                     & ${8:•}
+	\end{tikzcd}\]
+	${0}
+
+snippet ses "Short exact sequence" b
+	\[\begin{tikzcd}
+		0 \arrow[r] & ${1:•} \arrow[r, "${2:f}"] & ${3:•} \arrow[r, "${4:g}"] & ${5:•} \arrow[r] & 0
+	\end{tikzcd}\]
+	${0}
+
+snippet les "Long exact sequence" b
+	\[\begin{tikzcd}
+		\cdots \arrow[r] & ${1:•} \arrow[r, "${2:\partial}"] & ${3:•} \arrow[r, "${4:f}"] & ${5:•} \arrow[r, "${6:g}"] & ${7:•} \arrow[r] & \cdots
+	\end{tikzcd}\]
+	${0}
+
+snippet snake "Snake lemma diagram" b
+	\[\begin{tikzcd}
+		& ${1:•} \arrow[r, "${2:f}"] \arrow[d, "${3:\alpha}"'] & ${4:•} \arrow[r, "${5:g}"] \arrow[d, "${6:\beta}"] & ${7:•} \arrow[r] \arrow[d, "${8:\gamma}"] & 0 \\
+		0 \arrow[r] & ${9:•} \arrow[r, "${10:f'}"'] & ${11:•} \arrow[r, "${12:g'}"'] & ${13:•} &
+	\end{tikzcd}\]
+	${0}
+
+snippet pullback "Pullback square" b
+	\[\begin{tikzcd}
+		${1:•} \arrow[r, "${2:p_2}"] \arrow[d, "${3:p_1}"'] \arrow[dr, phantom, "\lrcorner", very near start] & ${4:•} \arrow[d, "${5:g}"] \\
+		${6:•} \arrow[r, "${7:f}"']                                                                            & ${8:•}
+	\end{tikzcd}\]
+	${0}
+
+snippet pushout "Pushout square" b
+	\[\begin{tikzcd}
+		${1:•} \arrow[r, "${2:f}"] \arrow[d, "${3:g}"']                                               & ${4:•} \arrow[d, "${5:i_1}"] \\
+		${6:•} \arrow[r, "${7:i_2}"'] \arrow[ur, phantom, "\ulcorner", very near end] & ${8:•}
+	\end{tikzcd}\]
+	${0}
 
 
 

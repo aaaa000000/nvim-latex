@@ -106,6 +106,7 @@ All leader-based mappings use `<Space>` as the leader key and are organized into
 
 | Key | Action | Description |
 |-----|--------|-------------|
+| `<leader>b` | Build and view PDF | Compile LaTeX and auto-open PDF in Zathura *(LaTeX files only, personal)* |
 | `<leader>c` | Create vertical split | Split window vertically |
 | `<leader>d` | Save and delete buffer | Save file and close buffer |
 | `<leader>e` | Toggle NvimTree explorer | Open/close file explorer |
@@ -498,3 +499,21 @@ For more information about the overall configuration structure, see the main [RE
 - [RESEARCH_TOOLING.md](RESEARCH_TOOLING.md) - VimTeX and research tool mappings
 - [NOTIFICATIONS.md](NOTIFICATIONS.md) - Notification system commands
 - [Neotex Plugins](../lua/neotex/plugins/README.md) - Plugin-specific keybindings
+
+---
+
+## Personal Snippets — Homological Algebra (tikzcd)
+
+Defined in `snippets/tex.snippets`. Type the trigger and press `Tab` to expand.
+Use `Tab` / `Shift+Tab` to jump between placeholders. Object placeholders show as `•`.
+
+> Requires `\usepackage{tikz-cd}` in your LaTeX preamble.
+
+| Trigger    | Description                                             | Preview                          |
+|------------|---------------------------------------------------------|----------------------------------|
+| `tikzcd`   | Basic commutative square                                | `• → •` / `• → •`               |
+| `ses`      | Short exact sequence                                    | `0 → • → • → • → 0`             |
+| `les`      | Long exact sequence                                     | `… → • → • → • → …`             |
+| `snake`    | Snake lemma diagram (two rows, three vertical maps)     | `• → • → •` / `• → • → •`       |
+| `pullback` | Pullback square with corner symbol `⌟`                  | `• → •` / `• → •`               |
+| `pushout`  | Pushout square with corner symbol `⌜`                   | `• → •` / `• → •`               |
