@@ -511,9 +511,9 @@ Use `Tab` / `Shift+Tab` to jump between placeholders. Object placeholders show a
 
 | Trigger    | Description                                             | Preview                          |
 |------------|---------------------------------------------------------|----------------------------------|
-| `tikzcd`   | Basic commutative square                                | `• → •` / `• → •`               |
-| `ses`      | Short exact sequence                                    | `0 → • → • → • → 0`             |
-| `les`      | Long exact sequence                                     | `… → • → • → • → …`             |
-| `snake`    | Snake lemma diagram (two rows, three vertical maps)     | `• → • → •` / `• → • → •`       |
-| `pullback` | Pullback square with corner symbol `⌟`                  | `• → •` / `• → •`               |
-| `pushout`  | Pushout square with corner symbol `⌜`                   | `• → •` / `• → •`               |
+| `tikzcd`   | Basic commutative square                                | `⬤ → ⬤` / `⬤ → ⬤`               |
+| `ses`      | Short exact sequence                                    | `0 → ⬤ → ⬤ → ⬤ → 0`             |
+| `les`      | Long exact sequence                                     | `… → ⬤ → ⬤ → ⬤ → …`             |
+| `snake`    | Snake lemma diagram (two rows, three vertical maps)     | `⬤ → ⬤ → ⬤` / `⬤ → ⬤ → ⬤`       |
+| `pullback` | Pullback square with corner symbol `⌟`                  | `⬤ → ⬤` / `⬤ → ⬤`               |
+| `pushout`  | Pushout square with corner symbol `⌜`                   | `⬤ → ⬤` / `⬤ → ⬤`               |
