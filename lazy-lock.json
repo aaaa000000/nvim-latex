@@ -14,7 +14,7 @@
   "gruvbox.nvim": { "branch": "main", "commit": "a472496e1a4465a2dd574389dcf6cdb29af9bf1b" },
   "iron.nvim": { "branch": "master", "commit": "0e07ace465edff6c4ed6db9f3b7bf919c40aeffb" },
   "jupytext.nvim": { "branch": "main", "commit": "c8baf3ad344c59b3abd461ecc17fc16ec44d0f7b" },
-  "lazy.nvim": { "branch": "main", "commit": "306a05526ada86a7b30af95c5cc81ffba93fef97" },
+  "lazy.nvim": { "branch": "main", "commit": "85c7ff3711b730b4030d03144f6db6375044ae82" },
   "lean.nvim": { "branch": "main", "commit": "d6d480493345f0f6c02979a91622c6d5f186307d" },
   "lectic": { "branch": "main", "commit": "c9a55dea559fe60f4a1308f5871b691238eb3dd9" },
   "lualine.nvim": { "branch": "master", "commit": "47f91c416daef12db467145e16bed5bbfe00add8" },
