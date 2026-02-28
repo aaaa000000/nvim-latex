@@ -160,8 +160,16 @@ local function zathura_view()
   end
 end
 
+-- Returns true if the current line is a bare \[ or \] delimiter (no PDF content).
+-- SyncTeX maps these to unbounded regions, causing Zathura to highlight the full page.
+local function on_math_delim_line()
+  local line = vim.api.nvim_get_current_line()
+  return line:match('^%s*%\\%[$') ~= nil or line:match('^%s*%\\%]$') ~= nil
+end
+
 -- Only forward-search; never opens Zathura (for cursor sync).
 local function zathura_sync_if_open()
+  if on_math_delim_line() then return end
   local name = zathura_dbus_name()
   if name then
     zathura_dbus_forward(name, synctex_tex_path(), vim.fn.line('.'), vim.fn.col('.'))
