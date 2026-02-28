@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(head:*)",
+      "Bash(ls:*)"
     ]
   },
   "model": "sonnet",
@@ -9,6 +11,6 @@
   "enabledMcpjsonServers": [
     "lean-lsp"
   ],
-  "_comment": "Personal project overrides - not committed to git",
-  "outputStyle": "default"
+  "outputStyle": "default",
+  "_comment": "Personal project overrides - not committed to git"
 }

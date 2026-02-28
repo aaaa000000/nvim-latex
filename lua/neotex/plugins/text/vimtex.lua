@@ -2,7 +2,7 @@ return {
   "lervag/vimtex",
   init = function()
     -- Viewer settings
-    vim.g.vimtex_view_method = 'zathura'           -- Zathura PDF viewer (Wayland-compatible)
+    vim.g.vimtex_view_method = 'zathura'           -- Zathura PDF viewer
     vim.g.vimtex_context_pdf_viewer = 'okular'     -- External PDF viewer for the Vimtex menu
 
     -- Formatting settings
@@ -17,15 +17,15 @@ return {
     -- Compiler settings
     vim.g.vimtex_compiler_method = 'latexmk'       -- Explicit compiler backend selection
     vim.g.vimtex_compiler_latexmk = {              -- latexmk configuration
-      build_dir = 'build',                         -- Build artifacts directory
       out_dir = 'build',                           -- Output directory for PDF and aux files
-      aux_dir = 'build',                           -- Auxiliary files directory
       options = {
-        '-xelatex',                                -- Use XeLaTeX engine
         '-interaction=nonstopmode',                -- Don't stop on errors
         '-file-line-error',                        -- Better error messages
         '-synctex=1',                              -- Enable SyncTeX
       },
+    }
+    vim.g.vimtex_compiler_latexmk_engines = {
+      _ = '-xelatex',                              -- Default to XeLaTeX for all documents
     }
 
     -- Quickfix settings

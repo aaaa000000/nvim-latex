@@ -41,41 +41,17 @@ return {
         loader.load({ paths = { vim.fn.stdpath("config") .. "/snippets" } })
       end
       
-      -- Setup region check events for better snippet interaction
-      ls.config.set_config({
-        region_check_events = "CursorMoved,CursorMovedI",
-        delete_check_events = "TextChanged,TextChangedI",
-      })
+      -- NOTE: Do NOT set region_check_events or delete_check_events.
+      -- TextChangedI/CursorMovedI fire when editing placeholders and would
+      -- cause LuaSnip to exit the session before the user can jump forward.
 
-      -- Let blink.cmp handle Tab navigation primarily
-      -- Only set up select mode mapping for when snippet placeholders are selected
-      vim.keymap.set("s", "<Tab>", function()
-        if ls.jumpable(1) then
-          ls.jump(1)
-        else
-          -- Feed Tab key to let it behave normally
-          vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Tab>", true, false, true), "n", false)
-        end
-      end, { silent = true })
-      
-      vim.keymap.set("s", "<S-Tab>", function()
-        if ls.jumpable(-1) then
-          ls.jump(-1)
-        else
-          -- Feed S-Tab key to let it behave normally
-          vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<S-Tab>", true, false, true), "n", false)
-        end
-      end, { silent = true })
+      -- SELECT mode: handle Tab/S-Tab for placeholder navigation
+      vim.keymap.set("s", "<Tab>",   function() ls.jump(1)  end, { silent = true })
+      vim.keymap.set("s", "<S-Tab>", function() ls.jump(-1) end, { silent = true })
 
-      -- Clear snippet jump points when leaving insert mode
-      vim.api.nvim_create_autocmd("InsertLeave", {
-        callback = function()
-          if ls.session.current_nodes[vim.api.nvim_get_current_buf()] 
-            and not ls.session.jump_active then
-            ls.unlink_current()
-          end
-        end,
-      })
+      -- NOTE: Do NOT add InsertLeave autocmd to unlink snippets.
+      -- INSERT → SELECT mode transition fires InsertLeave, which would
+      -- immediately destroy the snippet session before the user can navigate.
       
       -- Debug command to check snippet state
       vim.api.nvim_create_user_command("LuaSnipInfo", function()

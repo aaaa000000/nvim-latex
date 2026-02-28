@@ -4,7 +4,7 @@ return {
   -- Use both markdown and lectic.markdown filetypes
   ft = { "markdown", "lectic.markdown" },
   cmd = { "Lectic" },
-  build = "npm install", -- Install dependencies
+  build = "npm ci", -- Install dependencies without modifying lockfile
   -- Don't modify the dir path - it's causing installation issues
   -- The plugin needs to be installed correctly first
   -- We'll let it install completely, then configure it

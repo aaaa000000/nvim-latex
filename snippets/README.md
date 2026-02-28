@@ -38,13 +38,109 @@ Python development snippets for common patterns and structures.
 ### tex.snippets
 LaTeX document preparation snippets for academic and professional writing.
 
-**Common Snippets:**
-- Document structure (sections, subsections)
-- Mathematical environments (equations, theorems, proofs)
-- Bibliography and citation patterns
-- Figure and table templates
-- Academic formatting (abstracts, acknowledgments)
-- Beamer presentation elements
+#### Homological Algebra — Commutative Diagrams (`tikzcd`)
+
+| Trigger   | Description                          | Placeholders |
+|-----------|--------------------------------------|--------------|
+| `tikzcd`  | Generic 2×2 commutative square       | A, B, C, D, f, g, h, k |
+| `ses`     | Short exact sequence `0→A→B→C→0`     | A, B, C, f, g |
+| `les`     | Long exact sequence `···→A→B→C→D→···`| A, B, C, D, ∂, f, g |
+| `les0`    | Long exact sequence from 0 `0→A→B→C→D→E→···` | A, B, C, D, E, f, g, h, k |
+| `cmap`    | Chain map (two rows + vertical α_n)  | `\partial` (mirrors), `\alpha` (mirrors) |
+| `lchain`  | Long chain `0→C₁→⋯→C₅↘C₆→⋯→C₁₀→···` (two-row) | — |
+| `snake`   | Snake lemma 3×2 grid                 | A,B,C,A',B',C', α,β,γ, f,g,f',g' |
+| `pullback`| Pullback square with `⌟` corner mark | P, A, B, C, p₁, p₂, f, g |
+| `pushout` | Pushout square with `⌜` corner mark  | A, B, C, P, f, g, i₁, i₂ |
+
+**Notes on `cmap`:**
+- Tab 1 sets the boundary map symbol (default `\partial`) — auto-mirrors to all 4 horizontal arrow labels in both rows
+- Tab 2 sets the chain map symbol (default `\alpha`) — auto-mirrors to all 3 vertical arrow labels
+- Individual subscripts (`_{n+1}`, `_n`, `_{n-1}`) are hardcoded
+
+**Notes on `lchain`:**
+- Splits across two rows at C₅/C₆ with a `dll` diagonal connecting arrow
+- Map labels `f_1`…`f_{10}` are hardcoded; edit manually after expansion
+- Uses `[column sep=small]` to keep width manageable
+
+#### Theorem Environments
+
+| Trigger      | Description                  |
+|--------------|------------------------------|
+| `Tthm`       | Theorem + proof block        |
+| `Mthm`       | Main theorem + proof block   |
+| `Cthm`       | Corollary theorem + proof    |
+| `Rthm`       | Remark theorem + proof       |
+| `Lthm`       | Lemma theorem + proof        |
+| `Pthm`       | Proposition theorem + proof  |
+| `Dthm`       | Definition theorem + proof   |
+| `customthm`  | Custom named theorem         |
+| `thrm`       | `\begin{theorem}` env        |
+| `lemma`      | `\begin{Lthm}` env           |
+| `prop`       | `\begin{Pthm}` env           |
+| `def`        | `\begin{definition}` env     |
+| `corl`       | `\begin{corollary}` env      |
+| `prob`       | Problem environment          |
+| `example`    | Example environment          |
+| `prf`        | Proof block (quote style)    |
+
+#### Math Environments
+
+| Trigger | Description                        |
+|---------|------------------------------------|
+| `eqn`   | `equation` (numbered, with label)  |
+| `eqs`   | `equation*` (unnumbered)           |
+| `gat`   | `gather` (numbered)                |
+| `gats`  | `gather*` (unnumbered)             |
+| `align` | `align` / `aligned` env            |
+| `dm`    | Display math `\[ … \]`             |
+| `im`    | Inline math `$ … $`                |
+
+#### List Environments
+
+| Trigger | Description                          |
+|---------|--------------------------------------|
+| `enu`   | `enumerate` with `\item`             |
+| `enur`  | `enumerate[label=(\roman*)]`         |
+| `enua`  | `enumerate[label=(\alph*)]`          |
+| `itm`   | `itemize` with `\item`               |
+
+#### Document Structure
+
+| Trigger | Description         |
+|---------|---------------------|
+| `sec`   | `\section`          |
+| `sub`   | `\subsection`       |
+| `ssub`  | `\subsubsection`    |
+| `hsec`  | `\hypsection`       |
+| `hsub`  | `\hypsubsection`    |
+| `hssub` | `\hypsubsubsection` |
+| `begin` | `\begin{}/\end{}`   |
+
+#### Text & Math Formatting
+
+| Trigger | Description              |
+|---------|--------------------------|
+| `it`    | `\textit{}`              |
+| `bf`    | `\textbf{}`              |
+| `tt`    | `\texttt{}`              |
+| `sc`    | `\textsc{}`              |
+| `mf`    | `\mathfrak{}`            |
+| `mc`    | `\mathcal{}`             |
+| `ms`    | `\mathscr{}`             |
+
+#### Misc
+
+| Trigger      | Description                    |
+|--------------|--------------------------------|
+| `nc`         | `\newcommand`                  |
+| `up`         | `\usepackage`                  |
+| `fig`        | Figure + `\includegraphics`    |
+| `tikz`       | Tikzpicture figure environment |
+| `fn`         | `\footnote{}`                  |
+| `lab`        | `\label{}`                     |
+| `textbox`    | `tcolorbox` environment        |
+| `frame`      | Beamer frame                   |
+| `gloss`      | Glossary entry                 |
 
 ## Usage
 

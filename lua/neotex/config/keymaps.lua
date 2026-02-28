@@ -65,6 +65,12 @@ TEXT MANIPULATION                              | DESCRIPTION
 <, >                                           | Decrease/increase indentation (preserves selection)
 
 ----------------------------------------------------------------------------------
+LATEX-SPECIFIC KEYBINDINGS (insert mode, tex buffers only)  | DESCRIPTION
+----------------------------------------------------------------------------------
+<C-S-m>                                        | Inline math $...$  (with placeholder)
+<C-S-d>                                        | Display math \[...\]  (with placeholder)
+
+----------------------------------------------------------------------------------
 MARKDOWN-SPECIFIC KEYBINDINGS                  | DESCRIPTION
 ----------------------------------------------------------------------------------
 <CR> (Enter)                                   | Create new bullet point

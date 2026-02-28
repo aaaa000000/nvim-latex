@@ -76,13 +76,29 @@ return {
         -- CR mapping removed - handled by autopairs.lua integration
         -- This prevents conflicts and allows smart pair expansion
         -- ['<CR>'] = { 'accept', 'fallback' },
-        -- Tab: Navigate snippets or accept completion
+        -- Tab: Jump LuaSnip placeholder first, then accept completion
+        -- NOTE: ls.in_snippet() guard prevents select_and_accept from firing
+        -- while a LuaSnip session is still alive (e.g. on the last placeholder).
+        -- This is the second line of defense; the first is the jumpable(1) check.
+        -- Do NOT remove either check — they prevent the placeholder-navigation bug.
         ['<Tab>'] = {
-          'snippet_forward',      -- First try to jump in snippet
-          'select_and_accept',    -- Then select & accept completion
-          'fallback'              -- Finally fallback to normal Tab
+          function()
+            local ls = require('luasnip')
+            if ls.jumpable(1) then ls.jump(1); return true end
+            if ls.in_snippet() then return true end  -- session alive but no forward node: consume Tab
+          end,
+          'select_and_accept',
+          'fallback'
         },
-        ['<S-Tab>'] = { 'snippet_backward', 'select_prev', 'fallback' },
+        ['<S-Tab>'] = {
+          function()
+            local ls = require('luasnip')
+            if ls.jumpable(-1) then ls.jump(-1); return true end
+            if ls.in_snippet() then return true end  -- session alive but no backward node: consume S-Tab
+          end,
+          'select_prev',
+          'fallback'
+        },
       },
 
       appearance = {

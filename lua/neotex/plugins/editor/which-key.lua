@@ -220,7 +220,6 @@ return {
     -- ============================================================================
 
     wk.add({
-      { "<leader>b", "<cmd>VimtexCompile<CR>", desc = "build and view pdf", icon = "󰖷", cond = is_latex },
       { "<leader>c", "<cmd>vert sb<CR>", desc = "create split", icon = "󰯌" },
       { "<leader>d", "<cmd>update! | lua smart_bufdelete()<CR>", desc = "delete buffer", icon = "󰩺" },
       { "<leader>e", "<cmd>Neotree toggle<CR>", desc = "explorer", icon = "󰙅" },
