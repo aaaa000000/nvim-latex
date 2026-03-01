@@ -74,7 +74,11 @@ return {
       capabilities = capabilities,
       settings = {
         texlab = {
-          build = { onSave = true },
+          build = {
+            executable = "latexmk",
+            args = { "-xelatex", "-outdir=build", "-interaction=nonstopmode", "-synctex=1", "%f" },
+            onSave = false,  -- vimtex handles compilation
+          },
           chktex = {
             onEdit = false,
             onOpenAndSave = false,
