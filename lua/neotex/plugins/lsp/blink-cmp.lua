@@ -335,7 +335,7 @@ return {
           preset = 'default',
           ['<C-k>'] = { 'select_prev', 'fallback' },
           ['<C-j>'] = { 'select_next', 'fallback' },
-          ['<CR>'] = { 'accept_and_enter', 'fallback' },
+          ['<CR>'] = { 'fallback' },
           ['<C-e>'] = { 'hide', 'fallback' },
           ['<Tab>'] = { 'select_and_accept', 'fallback' },
         },
