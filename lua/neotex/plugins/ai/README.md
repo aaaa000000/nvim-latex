@@ -129,13 +129,17 @@ ai.send_visual_to_claude_with_prompt() -- Visual selection with prompt
 ### Keybindings (in which-key.lua and keymaps.lua)
 
 **Global AI Toggles** (defined in keymaps.lua):
-- `<C-CR>` - Toggle Claude Code (all modes)
+- `<C-CR>` - Unified AI smart toggle (all modes):
+  - Nothing running → opens Stage 1 agent picker (ClaudeCode / OpenCode)
+  - One tool running → toggles that tool's window (show/hide)
+  - Both tools running → cycles: just OpenCode → just Claude → neither → just OpenCode → …
 - `<C-g>` - Toggle OpenCode interface (all modes)
 
 **Leader-based AI Commands** (defined in which-key.lua):
 - `<leader>a` - AI tools group
-- `<leader>ac` - Send selection to Claude (visual) / Claude commands (normal)
-- `<leader>as` - Claude sessions
+- `<leader>ac` - AI agent picker (Stage 1: choose tool, then session action)
+- `<leader>al` - Load AI commands/agents picker
+- `<leader>as` - Discord sessions
 - `<leader>ay` - Toggle Claude yolo mode (skip permissions)
 
 **OpenCode Commands** (`<leader>ao` submenu):

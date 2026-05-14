@@ -75,6 +75,15 @@ function M.get_help_content(folder_type)
     ""
   }
 
+  local base_flags = {
+    "Flags & Labels:",
+    "  u         - Toggle read/unread",
+    "  *         - Toggle star/flagged",
+    "  l         - Apply label/flag",
+    "  L         - Label management (create/delete)",
+    ""
+  }
+
   local base_sync = {
     "Sync & Accounts:",
     "  s         - Sync inbox",
@@ -123,6 +132,11 @@ function M.get_help_content(folder_type)
 
     -- Add actions
     for _, line in ipairs(base_actions) do
+      table.insert(lines, line)
+    end
+
+    -- Add flags & labels (Task #91)
+    for _, line in ipairs(base_flags) do
       table.insert(lines, line)
     end
 

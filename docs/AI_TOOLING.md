@@ -35,7 +35,26 @@ Claude Code provides official Claude AI integration with sophisticated session m
 - Projects requiring sophisticated session state management
 - Teams using Claude as primary AI provider
 
-**Keybindings**: `<C-c>` (toggle), `<leader>ac` (commands/visual selection), `<leader>as` (sessions), `<leader>aw` (worktrees)
+**Keybindings**: `<C-CR>` (unified AI tool picker), `<leader>al` (commands/agent loading), `<leader>as` (AI tool picker), `<leader>aw` (worktrees)
+
+## Unified AI Tool Picker
+
+Pressing `<C-CR>` invokes the unified two-stage AI tool picker:
+
+**Smart toggle**: If only one AI tool is active, `<C-CR>` directly toggles it. If both or neither are visible, the picker appears.
+
+**Stage 1 -- Tool selection**: A `vim.ui.select` dialog lets you choose between Claude Code and OpenCode. The last-used tool is remembered across Neovim restarts (stored via atomic writes, no backup file proliferation).
+
+**Stage 2 -- Session management**:
+- **Claude Code**: The existing 3-option Claude session picker opens (new session, restore previous, browse all).
+- **OpenCode**: A Telescope dropdown offers (a) Create new session, (b) Restore last session (with time-ago indicator), and (c) Browse all sessions. Last session tracking uses the `OpencodeEvent:session.idle` autocmd.
+
+**Keybindings**:
+| Key | Description |
+|-----|-------------|
+| `<C-CR>` | Smart toggle / unified AI tool picker |
+| `<leader>al` | AI commands/agent loader picker |
+| `<leader>as` | Open AI tool picker directly |
 
 ## Feature Comparison Matrix
 

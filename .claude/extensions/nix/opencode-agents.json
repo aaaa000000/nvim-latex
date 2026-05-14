@@ -1,0 +1,32 @@
+{
+  "agent": {
+    "nix-research": {
+      "description": "Research Nix, NixOS, and flakes",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/nix-research-agent.md}",
+      "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "glob": true,
+        "grep": true,
+        "bash": true,
+        "webfetch": true,
+        "websearch": true
+      }
+    },
+    "nix-implementation": {
+      "description": "Implement Nix expressions and configurations",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/nix-implementation-agent.md}",
+      "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "glob": true,
+        "grep": true,
+        "bash": true
+      }
+    }
+  }
+}

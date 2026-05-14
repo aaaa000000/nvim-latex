@@ -110,6 +110,117 @@ describe("picker.utils.scan", function()
 
       assert.equals(0, #results)
     end)
+
+    it("excludes files matching exclude_patterns", function()
+      local global_dir = temp_dir .. "/global"
+      local local_dir = temp_dir .. "/local"
+
+      vim.fn.mkdir(global_dir .. "/.claude/context/project/repo", "p")
+      vim.fn.mkdir(local_dir .. "/.claude/context", "p")
+
+      -- Create test files
+      vim.fn.writefile({"content1"}, global_dir .. "/.claude/context/project/repo/project-overview.md")
+      vim.fn.writefile({"content2"}, global_dir .. "/.claude/context/project/repo/update-project.md")
+      vim.fn.writefile({"content3"}, global_dir .. "/.claude/context/project/repo/other-file.md")
+
+      -- Exclude project-overview.md but not update-project.md
+      local exclude = { "project/repo/project-overview.md" }
+      local results = scan.scan_directory_for_sync(global_dir, local_dir, "context", "*.md", true, exclude)
+
+      -- Should return 2 files (update-project.md and other-file.md)
+      assert.equals(2, #results)
+      local names = {}
+      for _, r in ipairs(results) do
+        names[r.name] = true
+      end
+      assert.is_true(names["update-project.md"])
+      assert.is_true(names["other-file.md"])
+      assert.is_nil(names["project-overview.md"])
+    end)
+
+    it("returns all files when exclude_patterns is empty", function()
+      local global_dir = temp_dir .. "/global"
+      local local_dir = temp_dir .. "/local"
+
+      vim.fn.mkdir(global_dir .. "/.claude/context/project/repo", "p")
+      vim.fn.mkdir(local_dir .. "/.claude/context", "p")
+
+      vim.fn.writefile({"content1"}, global_dir .. "/.claude/context/project/repo/project-overview.md")
+      vim.fn.writefile({"content2"}, global_dir .. "/.claude/context/project/repo/update-project.md")
+
+      -- Empty exclusion list
+      local results = scan.scan_directory_for_sync(global_dir, local_dir, "context", "*.md", true, {})
+
+      assert.equals(2, #results)
+    end)
+
+    it("returns all files when exclude_patterns is nil (backward compat)", function()
+      local global_dir = temp_dir .. "/global"
+      local local_dir = temp_dir .. "/local"
+
+      vim.fn.mkdir(global_dir .. "/.claude/context/project/repo", "p")
+      vim.fn.mkdir(local_dir .. "/.claude/context", "p")
+
+      vim.fn.writefile({"content1"}, global_dir .. "/.claude/context/project/repo/file1.md")
+      vim.fn.writefile({"content2"}, global_dir .. "/.claude/context/project/repo/file2.md")
+
+      -- No exclusion parameter (nil)
+      local results = scan.scan_directory_for_sync(global_dir, local_dir, "context", "*.md", true)
+
+      assert.equals(2, #results)
+    end)
+
+    it("excludes nested path patterns correctly", function()
+      local global_dir = temp_dir .. "/global"
+      local local_dir = temp_dir .. "/local"
+
+      vim.fn.mkdir(global_dir .. "/.claude/context/project/repo", "p")
+      vim.fn.mkdir(global_dir .. "/.claude/context/core/formats", "p")
+      vim.fn.mkdir(local_dir .. "/.claude/context", "p")
+
+      -- Create files in different nested paths
+      vim.fn.writefile({"content1"}, global_dir .. "/.claude/context/project/repo/project-overview.md")
+      vim.fn.writefile({"content2"}, global_dir .. "/.claude/context/project/repo/self-healing-implementation-details.md")
+      vim.fn.writefile({"content3"}, global_dir .. "/.claude/context/core/formats/return-metadata-file.md")
+
+      -- Exclude both repo-specific files
+      local exclude = {
+        "project/repo/project-overview.md",
+        "project/repo/self-healing-implementation-details.md",
+      }
+      local results = scan.scan_directory_for_sync(global_dir, local_dir, "context", "*.md", true, exclude)
+
+      -- Should only return the core/formats file
+      assert.equals(1, #results)
+      assert.equals("return-metadata-file.md", results[1].name)
+    end)
+
+    it("files not in exclude list are still returned", function()
+      local global_dir = temp_dir .. "/global"
+      local local_dir = temp_dir .. "/local"
+
+      vim.fn.mkdir(global_dir .. "/.claude/context/project/repo", "p")
+      vim.fn.mkdir(local_dir .. "/.claude/context", "p")
+
+      -- Create multiple files
+      vim.fn.writefile({"content1"}, global_dir .. "/.claude/context/project/repo/excluded.md")
+      vim.fn.writefile({"content2"}, global_dir .. "/.claude/context/project/repo/included1.md")
+      vim.fn.writefile({"content3"}, global_dir .. "/.claude/context/project/repo/included2.md")
+
+      -- Exclude only one file
+      local exclude = { "project/repo/excluded.md" }
+      local results = scan.scan_directory_for_sync(global_dir, local_dir, "context", "*.md", true, exclude)
+
+      -- Should return 2 files
+      assert.equals(2, #results)
+      local names = {}
+      for _, r in ipairs(results) do
+        names[r.name] = true
+      end
+      assert.is_true(names["included1.md"])
+      assert.is_true(names["included2.md"])
+      assert.is_nil(names["excluded.md"])
+    end)
   end)
 
   describe("merge_artifacts", function()

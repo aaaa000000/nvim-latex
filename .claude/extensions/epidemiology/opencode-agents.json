@@ -1,0 +1,32 @@
+{
+  "agent": {
+    "epidemiology-research": {
+      "description": "Research epidemiology modeling and analysis tasks",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/epi-research-agent.md}",
+      "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "glob": true,
+        "grep": true,
+        "bash": true,
+        "webfetch": true,
+        "websearch": true
+      }
+    },
+    "epidemiology-implementation": {
+      "description": "Implement epidemiology models and analysis code",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/epi-implement-agent.md}",
+      "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "glob": true,
+        "grep": true,
+        "bash": true
+      }
+    }
+  }
+}

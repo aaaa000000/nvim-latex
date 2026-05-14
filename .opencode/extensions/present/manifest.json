@@ -1,0 +1,91 @@
+{
+  "name": "present",
+  "version": "1.0.0",
+  "description": "Research presentation support: grant writing, budget planning, timeline management, funding analysis, and academic talks",
+  "language": "present",
+  "dependencies": [
+    "core",
+    "slidev"
+  ],
+  "provides": {
+    "agents": [
+      "grant-agent.md",
+      "budget-agent.md",
+      "timeline-agent.md",
+      "funds-agent.md",
+      "slides-research-agent.md",
+      "pptx-assembly-agent.md",
+      "slidev-assembly-agent.md",
+      "slide-planner-agent.md",
+      "slide-critic-agent.md"
+    ],
+    "skills": [
+      "skill-grant",
+      "skill-budget",
+      "skill-timeline",
+      "skill-funds",
+      "skill-slides",
+      "skill-slide-planning",
+      "skill-slide-critic"
+    ],
+    "commands": [
+      "grant.md",
+      "budget.md",
+      "timeline.md",
+      "funds.md",
+      "slides.md"
+    ],
+    "rules": [],
+    "context": [
+      "project/present"
+    ],
+    "scripts": [],
+    "hooks": []
+  },
+  "routing": {
+    "research": {
+      "present": "skill-grant",
+      "present:grant": "skill-grant",
+      "present:budget": "skill-budget",
+      "present:timeline": "skill-timeline",
+      "present:funds": "skill-funds",
+      "present:slides": "skill-slides"
+    },
+    "plan": {
+      "present:slides": "skill-slide-planning",
+      "slides": "skill-slide-planning"
+    },
+    "implement": {
+      "present": "skill-grant",
+      "present:grant": "skill-grant",
+      "present:budget": "skill-budget",
+      "present:timeline": "skill-timeline",
+      "present:funds": "skill-funds",
+      "present:slides": "skill-slides"
+    },
+    "critique": {
+      "present:slides": "skill-slide-critic"
+    }
+  },
+  "merge_targets": {
+    "opencode_md": {
+      "source": "EXTENSION.md",
+      "target": ".opencode/AGENTS.md",
+      "section_id": "extension_oc_present"
+    },
+    "index": {
+      "source": "index-entries.json",
+      "target": ".opencode/context/index.json"
+    }
+  },
+  "mcp_servers": {
+    "superdoc": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@superdoc-dev/mcp"
+      ],
+      "env": {}
+    }
+  }
+}

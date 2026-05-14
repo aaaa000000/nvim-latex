@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "operations": [],
+  "summary": {
+    "total_operations": 0,
+    "total_purged": 0,
+    "total_merged": 0,
+    "total_compressed": 0,
+    "total_refined": 0,
+    "last_operation": null
+  }
+}

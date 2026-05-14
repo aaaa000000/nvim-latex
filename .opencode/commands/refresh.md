@@ -1,12 +1,14 @@
 ---
-description: Comprehensive cleanup of Claude Code resources - terminate orphaned processes and clean up ~/.opencode/ directory
-allowed-tools: Bash(ps:*), Bash(kill:*), Bash(rm:*), Bash(find:*), Bash(ls:*), Bash(du:*), Bash(mkdir:*), Bash(cp:*), Bash(mv:*), Bash(date:*), Read, Glob
+description: Manage OpenCode resources - terminate orphaned processes and clean up files
+allowed-tools: Bash, Read, Glob, AskUserQuestion
 argument-hint: [--dry-run] [--force]
 ---
 
+> **COMMAND EXECUTION MODE** — You have been invoked as this command with arguments: `$ARGUMENTS`. Execute the workflow below immediately. Do not summarize this file, ask what to do with it, or describe its contents. Start execution now.
+
 # /refresh Command
 
-Comprehensive cleanup of Claude Code resources - terminate orphaned processes and clean up ~/.opencode/ directory.
+Comprehensive cleanup of OpenCode resources - terminate orphaned processes and clean up ~/.opencode/ directory.
 
 ## Syntax
 
@@ -16,33 +18,33 @@ Comprehensive cleanup of Claude Code resources - terminate orphaned processes an
 
 ## Options
 
-| Flag        | Description                                                                      |
-| ----------- | -------------------------------------------------------------------------------- |
-| `--dry-run` | Preview both process and directory cleanup without making changes                |
-| `--force`   | Skip confirmation and execute immediately (8-hour default for directory cleanup) |
-| (no flags)  | Interactive mode with process cleanup and age threshold selection                |
+| Flag | Description |
+|------|-------------|
+| `--dry-run` | Preview both process and directory cleanup without making changes |
+| `--force` | Skip confirmation and execute immediately (8-hour default for directory cleanup) |
+| (no flags) | Interactive mode with process cleanup and age threshold selection |
 
 ## What It Cleans
 
 ### Process Cleanup
 
-Identifies and terminates orphaned Claude Code processes (detached processes without a controlling terminal).
+Identifies and terminates orphaned OpenCode processes (detached processes without a controlling terminal).
 
 ### Directory Cleanup
 
 Cleans accumulated files in ~/.opencode/:
 
-| Directory        | Contents                                |
-| ---------------- | --------------------------------------- |
-| projects/        | Session .jsonl files and subdirectories |
-| debug/           | Debug output files                      |
-| file-history/    | File version snapshots                  |
-| todos/           | Todo list backups                       |
-| session-env/     | Environment snapshots                   |
-| telemetry/       | Usage telemetry data                    |
-| shell-snapshots/ | Shell state                             |
-| plugins/cache/   | Old plugin versions                     |
-| cache/           | General cache                           |
+| Directory | Contents |
+|-----------|----------|
+| projects/ | Session .jsonl files and subdirectories |
+| debug/ | Debug output files |
+| file-history/ | File version snapshots |
+| todos/ | Todo list backups |
+| session-env/ | Environment snapshots |
+| telemetry/ | Usage telemetry data |
+| shell-snapshots/ | Shell state |
+| plugins/cache/ | Old plugin versions |
+| cache/ | General cache |
 
 ## Interactive Mode
 
@@ -64,9 +66,8 @@ args: {flags from command}
 ```
 
 The skill executes both cleanup types sequentially:
-
-1. Process cleanup (using opencode-refresh.sh)
-2. Directory cleanup (using opencode-cleanup.sh)
+1. Process cleanup (using claude-refresh.sh)
+2. Directory cleanup (using claude-cleanup.sh)
 
 ## Safety
 
@@ -84,7 +85,7 @@ Files modified within the last hour are **never deleted**, regardless of age thr
 ### Process Protection
 
 - Only targets processes without a controlling terminal (TTY = "?")
-- Never kills active Claude Code sessions
+- Never kills active OpenCode sessions
 - Excludes current process tree
 
 ## Examples
@@ -115,7 +116,7 @@ Files modified within the last hour are **never deleted**, regardless of age thr
 ### Survey Output
 
 ```
-Claude Code Refresh
+OpenCode Refresh
 ===================
 
 No orphaned processes found.
@@ -123,7 +124,7 @@ All 3 Claude processes are active sessions.
 
 ---
 
-Claude Code Directory Cleanup
+OpenCode Directory Cleanup
 =============================
 
 Target: ~/.opencode/

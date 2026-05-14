@@ -1,0 +1,83 @@
+{
+  "entries": [
+    {
+      "path": "project/memory/learn-usage.md",
+      "domain": "project",
+      "subdomain": "memory",
+      "topics": ["memory", "learn", "knowledge-capture"],
+      "keywords": ["learn", "memory", "vault", "content-mapping"],
+      "summary": "Usage guide for /learn command and memory management",
+      "line_count": 150,
+      "load_when": {
+        "skills": ["skill-memory"],
+        "commands": ["/learn"]
+      }
+    },
+    {
+      "path": "project/memory/memory-setup.md",
+      "domain": "project",
+      "subdomain": "memory",
+      "topics": ["memory", "mcp", "setup"],
+      "keywords": ["obsidian", "mcp", "setup", "configuration"],
+      "summary": "MCP server setup for Obsidian memory vault",
+      "line_count": 120,
+      "load_when": {
+        "skills": ["skill-memory"],
+        "commands": ["/learn"]
+      }
+    },
+    {
+      "path": "project/memory/memory-troubleshooting.md",
+      "domain": "project",
+      "subdomain": "memory",
+      "topics": ["memory", "troubleshooting", "debugging"],
+      "keywords": ["troubleshooting", "errors", "memory", "mcp"],
+      "summary": "Troubleshooting guide for memory system issues",
+      "line_count": 250,
+      "load_when": {
+        "skills": ["skill-memory"]
+      }
+    },
+    {
+      "path": "project/memory/domain/memory-reference.md",
+      "domain": "project",
+      "subdomain": "memory",
+      "topics": ["memory", "reference", "vault", "distill"],
+      "keywords": ["memory", "vault", "classification", "scoring", "distill"],
+      "summary": "Memory vault reference: MCP integration, vault structure, classification, scoring engine, maintenance operations",
+      "line_count": 57,
+      "load_when": {
+        "skills": ["skill-memory"],
+        "commands": ["/learn", "/distill"],
+        "agents": ["general-research-agent"]
+      }
+    },
+    {
+      "path": "project/memory/knowledge-capture-usage.md",
+      "domain": "project",
+      "subdomain": "memory",
+      "topics": ["memory", "knowledge-capture", "workflows"],
+      "keywords": ["knowledge", "capture", "learn", "todo", "harvest"],
+      "summary": "Example workflows for knowledge capture system",
+      "line_count": 180,
+      "load_when": {
+        "skills": ["skill-memory"],
+        "commands": ["/learn"]
+      }
+    },
+    {
+      "path": "project/memory/distill-usage.md",
+      "domain": "project",
+      "subdomain": "memory",
+      "topics": ["memory", "distill", "maintenance", "scoring"],
+      "keywords": ["distill", "purge", "merge", "compress", "refine", "scoring", "health"],
+      "summary": "Usage guide for /distill command: sub-mode workflows, scoring formula, maintenance cadence",
+      "line_count": 180,
+      "load_when": {
+        "skills": ["skill-memory"],
+        "commands": ["/distill"],
+        "agents": ["general-research-agent"]
+      }
+    }
+  ]
+}

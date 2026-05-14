@@ -1,0 +1,28 @@
+{
+  "agent": {
+    "formal-research": {
+      "description": "Coordinate formal reasoning research across logic, math, and physics domains",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/formal-research-agent.md}",
+      "tools": {"read":true,"write":true,"edit":true,"glob":true,"grep":true,"bash":true,"webfetch":true,"websearch":true}
+    },
+    "logic-research": {
+      "description": "Research formal mathematical logic tasks using domain context and codebase exploration",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/logic-research-agent.md}",
+      "tools": {"read":true,"write":true,"edit":true,"glob":true,"grep":true,"bash":true,"webfetch":true,"websearch":true}
+    },
+    "math-research": {
+      "description": "Research mathematical tasks using domain context and codebase exploration",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/math-research-agent.md}",
+      "tools": {"read":true,"write":true,"edit":true,"glob":true,"grep":true,"bash":true,"webfetch":true,"websearch":true}
+    },
+    "physics-research": {
+      "description": "Research physics formalization tasks using domain context and codebase exploration",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/physics-research-agent.md}",
+      "tools": {"read":true,"write":true,"edit":true,"glob":true,"grep":true,"bash":true,"webfetch":true,"websearch":true}
+    }
+  }
+}

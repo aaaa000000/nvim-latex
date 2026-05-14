@@ -1,0 +1,214 @@
+{
+  "entries": [
+    {
+      "path": "project/epidemiology/README.md",
+      "domain": "project",
+      "subdomain": "epidemiology",
+      "topics": ["epidemiology", "r-modeling", "infectious-disease"],
+      "keywords": ["epidemiology", "EpiModel", "Stan", "R"],
+      "summary": "Epidemiology domain overview and R-based research workflows",
+      "line_count": 79,
+      "load_when": {
+        "task_types": ["epi", "epi:study"],
+        "agents": ["epi-research-agent", "epi-implement-agent"],
+        "commands": ["/epi"]
+      }
+    },
+    {
+      "path": "project/epidemiology/tools/r-packages.md",
+      "domain": "project",
+      "subdomain": "epidemiology",
+      "topics": ["EpiModel", "epidemia", "EpiNow2", "EpiEstim"],
+      "keywords": ["packages", "r-packages", "modeling-tools"],
+      "summary": "Comprehensive documentation for key R epidemiology packages",
+      "line_count": 323,
+      "load_when": {
+        "task_types": ["epi", "epi:study"],
+        "agents": ["epi-research-agent", "epi-implement-agent"],
+        "commands": ["/epi"]
+      }
+    },
+    {
+      "path": "project/epidemiology/tools/mcp-guide.md",
+      "domain": "project",
+      "subdomain": "epidemiology",
+      "topics": ["mcp", "r", "integration"],
+      "keywords": ["mcp", "server", "r-integration"],
+      "summary": "MCP server integration for R-based analysis",
+      "line_count": 78,
+      "load_when": {
+        "task_types": ["epi", "epi:study"],
+        "agents": ["epi-research-agent", "epi-implement-agent"],
+        "commands": ["/epi"]
+      }
+    },
+    {
+      "path": "project/epidemiology/patterns/statistical-modeling.md",
+      "domain": "project",
+      "subdomain": "epidemiology",
+      "topics": ["statistical", "modeling", "regression", "bayesian"],
+      "keywords": ["statistical-modeling", "regression", "bayesian", "glm", "mixed-effects"],
+      "summary": "Statistical modeling patterns for epidemiology analysis",
+      "line_count": 303,
+      "load_when": {
+        "task_types": ["epi", "epi:study"],
+        "agents": ["epi-research-agent", "epi-implement-agent"],
+        "commands": ["/epi"]
+      }
+    },
+    {
+      "path": "project/epidemiology/domain/study-designs.md",
+      "domain": "project",
+      "subdomain": "epidemiology",
+      "topics": ["study-design", "cohort", "case-control", "rct"],
+      "keywords": ["study-design", "cohort", "case-control", "cross-sectional", "rct"],
+      "summary": "Study design reference with R packages and statistical models",
+      "line_count": 239,
+      "load_when": {
+        "task_types": ["epi", "epi:study"],
+        "agents": ["epi-research-agent"],
+        "commands": ["/epi"]
+      }
+    },
+    {
+      "path": "project/epidemiology/domain/causal-inference.md",
+      "domain": "project",
+      "subdomain": "epidemiology",
+      "topics": ["causal-inference", "dag", "propensity-score", "iv"],
+      "keywords": ["causal-inference", "dag", "propensity-score", "instrumental-variable", "mediation"],
+      "summary": "Causal inference methods including DAGs, propensity scores, and mediation",
+      "line_count": 195,
+      "load_when": {
+        "task_types": ["epi", "epi:study"],
+        "agents": ["epi-research-agent"],
+        "commands": ["/epi"]
+      }
+    },
+    {
+      "path": "project/epidemiology/domain/missing-data.md",
+      "domain": "project",
+      "subdomain": "epidemiology",
+      "topics": ["missing-data", "imputation", "mice", "sensitivity"],
+      "keywords": ["missing-data", "multiple-imputation", "mice", "mcar", "mar", "mnar"],
+      "summary": "Missing data handling strategies and multiple imputation workflows",
+      "line_count": 144,
+      "load_when": {
+        "task_types": ["epi", "epi:study"],
+        "agents": ["epi-research-agent"],
+        "commands": ["/epi"]
+      }
+    },
+    {
+      "path": "project/epidemiology/domain/data-management.md",
+      "domain": "project",
+      "subdomain": "epidemiology",
+      "topics": ["data-management", "tidyverse", "cleaning", "validation"],
+      "keywords": ["data-management", "tidyverse", "data-cleaning", "validation", "codebook"],
+      "summary": "Data management workflows for epidemiology datasets",
+      "line_count": 265,
+      "load_when": {
+        "task_types": ["epi", "epi:study"],
+        "agents": ["epi-research-agent"],
+        "commands": ["/epi"]
+      }
+    },
+    {
+      "path": "project/epidemiology/domain/reporting-standards.md",
+      "domain": "project",
+      "subdomain": "epidemiology",
+      "topics": ["reporting", "strobe", "consort", "prisma"],
+      "keywords": ["reporting-standards", "strobe", "consort", "prisma", "guidelines"],
+      "summary": "Epidemiology reporting guidelines and checklist references",
+      "line_count": 98,
+      "load_when": {
+        "task_types": ["epi", "epi:study"],
+        "agents": ["epi-research-agent"],
+        "commands": ["/epi"]
+      }
+    },
+    {
+      "path": "project/epidemiology/domain/r-workflow.md",
+      "domain": "project",
+      "subdomain": "epidemiology",
+      "topics": ["r-workflow", "renv", "targets", "reproducibility"],
+      "keywords": ["r-workflow", "renv", "targets", "quarto", "reproducible-research"],
+      "summary": "R project workflow patterns with renv, targets, and Quarto",
+      "line_count": 162,
+      "load_when": {
+        "task_types": ["epi", "epi:study"],
+        "agents": ["epi-research-agent"],
+        "commands": ["/epi"]
+      }
+    },
+    {
+      "path": "project/epidemiology/patterns/observational-methods.md",
+      "domain": "project",
+      "subdomain": "epidemiology",
+      "topics": ["observational", "confounding", "bias", "effect-modification"],
+      "keywords": ["observational-methods", "confounding", "bias", "effect-modification", "stratification"],
+      "summary": "Observational study method patterns for bias control and effect estimation",
+      "line_count": 228,
+      "load_when": {
+        "task_types": ["epi", "epi:study"],
+        "agents": ["epi-research-agent", "epi-implement-agent"],
+        "commands": ["/epi"]
+      }
+    },
+    {
+      "path": "project/epidemiology/patterns/analysis-phases.md",
+      "domain": "project",
+      "subdomain": "epidemiology",
+      "topics": ["analysis-phases", "workflow", "descriptive", "multivariable"],
+      "keywords": ["analysis-phases", "descriptive", "bivariate", "multivariable", "sensitivity"],
+      "summary": "Structured analysis phase patterns from descriptive to sensitivity",
+      "line_count": 149,
+      "load_when": {
+        "task_types": ["epi", "epi:study"],
+        "agents": ["epi-research-agent", "epi-implement-agent"],
+        "commands": ["/epi"]
+      }
+    },
+    {
+      "path": "project/epidemiology/patterns/strobe-checklist.md",
+      "domain": "project",
+      "subdomain": "epidemiology",
+      "topics": ["strobe", "checklist", "reporting"],
+      "keywords": ["strobe", "checklist", "observational-study", "reporting"],
+      "summary": "STROBE checklist for observational study reporting",
+      "line_count": 63,
+      "load_when": {
+        "task_types": ["epi", "epi:study"],
+        "agents": ["epi-research-agent", "epi-implement-agent"],
+        "commands": ["/epi"]
+      }
+    },
+    {
+      "path": "project/epidemiology/templates/analysis-plan.md",
+      "domain": "project",
+      "subdomain": "epidemiology",
+      "topics": ["template", "analysis-plan", "protocol"],
+      "keywords": ["analysis-plan", "template", "protocol", "sap"],
+      "summary": "Analysis plan template for structuring epidemiology study protocols",
+      "line_count": 156,
+      "load_when": {
+        "task_types": ["epi", "epi:study"],
+        "agents": ["epi-implement-agent"],
+        "commands": ["/epi"]
+      }
+    },
+    {
+      "path": "project/epidemiology/templates/findings-report.md",
+      "domain": "project",
+      "subdomain": "epidemiology",
+      "topics": ["template", "findings", "report"],
+      "keywords": ["findings-report", "template", "results", "tables", "figures"],
+      "summary": "Findings report template for presenting epidemiology results",
+      "line_count": 129,
+      "load_when": {
+        "task_types": ["epi", "epi:study"],
+        "agents": ["epi-implement-agent"],
+        "commands": ["/epi"]
+      }
+    }
+  ]
+}

@@ -75,6 +75,11 @@ snacks/
 - **Smart renaming** with LSP integration
 - **Performance optimizations**
 
+#### 9. **Big File Detection** (`bigfile`)
+- **Automatic optimization** for files over 100KB or with long lines (>1000 chars)
+- **Disables expensive features** (matchparen, folding, completion, animations)
+- **TeX files excluded** to preserve `after/ftplugin/tex.lua` keymaps (`<leader>l` group)
+
 ### Text Objects & Navigation
 
 #### 9. **Scope Text Objects** (`scope`)
@@ -181,7 +186,6 @@ q  - Quit
 
 The following snacks components are intentionally disabled:
 
-- **bigfile**: File size optimization (disabled, using 100KB threshold)
 - **profiler**: Performance profiling (not needed)
 - **scratch**: Scratch buffers (not used)
 - **scroll**: Smooth scrolling (conflicts with other plugins)

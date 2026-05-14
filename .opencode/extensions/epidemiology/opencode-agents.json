@@ -1,0 +1,16 @@
+{
+  "agent": {
+    "epidemiology-implementation": {
+      "description": "Implementation agent for R-based epidemiology analysis",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/epidemiology-implementation-agent.md}",
+      "tools": {"write":true,"edit":true,"bash":true,"read":true,"glob":true,"grep":true}
+    },
+    "epidemiology-research": {
+      "description": "Research agent for epidemiology and public health",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/epidemiology-research-agent.md}",
+      "tools": {"read":true,"write":true,"edit":true,"glob":true,"grep":true,"bash":true,"webfetch":true,"websearch":true}
+    }
+  }
+}

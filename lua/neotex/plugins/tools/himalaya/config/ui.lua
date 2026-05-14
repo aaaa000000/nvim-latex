@@ -404,6 +404,39 @@ function M.setup_email_list_keymaps(bufnr)
   keymap('n', 'i', function()
     vim.cmd('HimalayaSyncInfo')
   end, vim.tbl_extend('force', opts, { desc = 'Show sync info' }))
+
+  -- Flags & Labels keymaps (Task #91)
+  -- u - toggle read/unread (selection-aware)
+  keymap('n', 'u', function()
+    local ok, labels = pcall(require, 'neotex.plugins.tools.himalaya.features.labels')
+    if ok and labels.toggle_read_status then
+      labels.toggle_read_status()
+    end
+  end, vim.tbl_extend('force', opts, { desc = 'Toggle read/unread' }))
+
+  -- * - toggle star/flagged (selection-aware) - using * since s/S are for sync
+  keymap('n', '*', function()
+    local ok, labels = pcall(require, 'neotex.plugins.tools.himalaya.features.labels')
+    if ok and labels.toggle_star_status then
+      labels.toggle_star_status()
+    end
+  end, vim.tbl_extend('force', opts, { desc = 'Toggle star/flagged' }))
+
+  -- l - apply label/flag picker (selection-aware)
+  keymap('n', 'l', function()
+    local ok, labels = pcall(require, 'neotex.plugins.tools.himalaya.features.labels')
+    if ok and labels.show_flag_picker then
+      labels.show_flag_picker()
+    end
+  end, vim.tbl_extend('force', opts, { desc = 'Apply label/flag' }))
+
+  -- L - label management menu (create/delete folders)
+  keymap('n', 'L', function()
+    local ok, labels = pcall(require, 'neotex.plugins.tools.himalaya.features.labels')
+    if ok and labels.show_label_management_menu then
+      labels.show_label_management_menu()
+    end
+  end, vim.tbl_extend('force', opts, { desc = 'Label management' }))
 end
 
 -- Setup preview keymaps
@@ -579,7 +612,12 @@ function M.get_keybinding(filetype, action)
       sync_inbox = 's',
       sync_all = 'S',
       switch_account = 'A',
-      sync_info = 'i'
+      sync_info = 'i',
+      -- Flags & Labels keymaps (Task #91)
+      toggle_read = 'u',
+      toggle_star = '*',
+      apply_label = 'l',
+      label_management = 'L'
     },
     ['himalaya-preview'] = {
       close = 'q',

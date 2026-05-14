@@ -23,6 +23,26 @@ return {
       notify = true,
       size = 100 * 1024,   -- 100 KB
       line_length = 1000,  -- Lines longer than this trigger bigfile mode
+      ---@param ctx {buf: number, ft: string}
+      setup = function(ctx)
+        -- Exclude tex files from bigfile mode (preserves ftplugin keymaps)
+        if ctx.ft == "tex" then
+          vim.bo[ctx.buf].filetype = ctx.ft
+          return
+        end
+        if vim.fn.exists(":NoMatchParen") ~= 0 then
+          vim.cmd([[NoMatchParen]])
+        end
+        Snacks.util.wo(0, { foldmethod = "manual", statuscolumn = "", conceallevel = 0 })
+        vim.b.completion = false
+        vim.b.minianimate_disable = true
+        vim.b.minihipatterns_disable = true
+        vim.schedule(function()
+          if vim.api.nvim_buf_is_valid(ctx.buf) then
+            vim.bo[ctx.buf].syntax = ctx.ft
+          end
+        end)
+      end,
     },
     bufdelete = { enabled = true },
     dashboard = {

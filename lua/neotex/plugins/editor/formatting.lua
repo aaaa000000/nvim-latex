@@ -88,12 +88,6 @@ return {
           stdin = true,
         },
         
-        -- Prettier formatter - explicitly configure
-        prettier = {
-          args = { "--stdin-filepath", "$FILENAME" },
-          stdin = true,
-        },
-        
         -- jq formatter for JSON
         jq = {
           args = { "." },

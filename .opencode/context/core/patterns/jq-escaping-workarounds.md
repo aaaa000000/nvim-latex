@@ -1,70 +1,37 @@
 # jq Escaping Workarounds
 
-This document describes workarounds for jq command escaping issues caused by Claude Code's Bash tool (Issue #1132).
+This document describes workarounds for jq command escaping issues caused by OpenCode's Bash tool (Issue #1132).
 
 ## Bug Description
 
-Claude Code's Bash tool has two escaping issues that affect jq commands (both variants of Issue #1132):
-
-### Issue 1: Pipe Injection
-
-Claude Code injects `< /dev/null` into commands containing pipe operators (`|`) inside quoted strings in certain positions. This corrupts jq filter expressions like `map(select(.type != "X"))`, causing parse errors.
-
-### Issue 2: `!=` Operator Escaping
-
-Claude Code escapes the `!=` operator as `\!=`, which jq cannot parse. This affects all jq commands using inequality comparisons.
+OpenCode's Bash tool injects `< /dev/null` into commands containing pipe operators (`|`) inside quoted strings in certain positions. This corrupts jq filter expressions like `map(select(.type != "X"))`, causing parse errors.
 
 ### Symptoms
 
-When running jq commands with `!=` or pipe patterns:
+When running jq commands with `map(select(.field != "value"))` patterns:
 
 ```
 jq: error: syntax error, unexpected INVALID_CHARACTER, expecting $end
 ```
 
-The error occurs because:
-1. The pipe in `map(select(.type == "research" | not))` triggers `< /dev/null` injection
-2. The `!=` operator gets escaped as `\!=` which is invalid jq syntax
+The error occurs because the pipe in `map(select(.type != "research"))` triggers the bug when positioned after an array accessor like `.artifacts`.
 
-### Affected Patterns
+### Affected Pattern
 
 ```bash
-# BROKEN - triggers < /dev/null injection AND != escaping
-artifacts: ((.artifacts // []) | map(select(.type == "research" | not))) + [...]
-
-# BROKEN - != escaping only
-select(.type == "plan" | not)
+# BROKEN - triggers < /dev/null injection
+artifacts: ((.artifacts // []) | map(select(.type != "research"))) + [...]
 ```
 
 ### Why It Happens
 
-The Claude Code Bash tool escape mechanism:
-1. Interprets `|` in quoted jq expressions as a shell pipe in certain contexts
-2. Escapes `!=` as `\!=` (likely treating it as a shell history expansion)
-
-Both bugs are marked NOT_PLANNED upstream (as of January 2026).
-
-## Recommended Solution: Use `| not` Pattern
-
-**PRIMARY SOLUTION**: Replace `!=` with `== "X" | not`:
-
-```bash
-# SAFE - use "| not" pattern instead of !=
-select(.type == "plan" | not)
-
-# Instead of:
-select(.type == "plan" | not)  # BROKEN - gets escaped as \!=
-```
-
-This pattern works because:
-- It avoids the `!=` operator entirely
-- The `|` in `== "X" | not` is inside the jq filter context, not triggering shell pipe injection
+The OpenCode Bash tool escape mechanism interprets `|` in quoted jq expressions as a shell pipe in certain contexts, leading to malformed command execution. The bug is marked NOT_PLANNED upstream (as of January 2026).
 
 ## Working Patterns
 
 ### Two-Step Approach (Recommended)
 
-Split artifact updates into separate jq calls, using `| not` pattern:
+Split artifact updates into separate jq calls:
 
 ```bash
 # Step 1: Update status and timestamps (no artifact manipulation)
@@ -74,13 +41,13 @@ jq --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
     status: $status,
     last_updated: $ts,
     researched: $ts
-  }' specs/state.json > /tmp/state.json && mv /tmp/state.json specs/state.json
+  }' specs/state.json > specs/tmp/state.json && mv specs/tmp/state.json specs/state.json
 
-# Step 2: Update artifacts - filter out old type using "| not" pattern, add new
+# Step 2: Update artifacts - filter out old type, add new
 jq --arg path "$artifact_path" \
   '(.active_projects[] | select(.project_number == '$task_number')).artifacts =
-    ([(.active_projects[] | select(.project_number == '$task_number')).artifacts // [] | .[] | select(.type == "research" | not)] + [{"path": $path, "type": "research"}])' \
-  specs/state.json > /tmp/state.json && mv /tmp/state.json specs/state.json
+    ([(.active_projects[] | select(.project_number == '$task_number')).artifacts // [] | .[] | select(.type != "research")] + [{"path": $path, "type": "research"}])' \
+  specs/state.json > specs/tmp/state.json && mv specs/tmp/state.json specs/state.json
 ```
 
 ### del() Approach (Alternative)
@@ -90,7 +57,7 @@ Use `del()` instead of `map(select(!=))`:
 ```bash
 jq --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
    --arg status "researched" \
-   --arg path "$artifact_path" \
+    --arg path "$artifact_path" \
   '(.active_projects[] | select(.project_number == '$task_number')) |= (
     del(.artifacts[] | select(.type == "research")) |
     . + {
@@ -99,7 +66,7 @@ jq --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
       researched: $ts,
       artifacts: ((.artifacts // []) + [{"path": $path, "type": "research"}])
     }
-  )' specs/state.json > /tmp/state.json && mv /tmp/state.json specs/state.json
+  )' specs/state.json > specs/tmp/state.json && mv specs/tmp/state.json specs/state.json
 ```
 
 ## Pattern Templates
@@ -114,13 +81,13 @@ jq --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
     status: $status,
     last_updated: $ts,
     researched: $ts
-  }' specs/state.json > /tmp/state.json && mv /tmp/state.json specs/state.json
+  }' specs/state.json > specs/tmp/state.json && mv specs/tmp/state.json specs/state.json
 
 # Step 2: Add artifact
 jq --arg path "$artifact_path" \
   '(.active_projects[] | select(.project_number == '$task_number')).artifacts =
-    ([(.active_projects[] | select(.project_number == '$task_number')).artifacts // [] | .[] | select(.type == "research" | not)] + [{"path": $path, "type": "research"}])' \
-  specs/state.json > /tmp/state.json && mv /tmp/state.json specs/state.json
+    ([(.active_projects[] | select(.project_number == '$task_number')).artifacts // [] | .[] | select(.type != "research")] + [{"path": $path, "type": "research"}])' \
+  specs/state.json > specs/tmp/state.json && mv specs/tmp/state.json specs/state.json
 ```
 
 ### Planning Postflight
@@ -133,13 +100,13 @@ jq --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
     status: $status,
     last_updated: $ts,
     planned: $ts
-  }' specs/state.json > /tmp/state.json && mv /tmp/state.json specs/state.json
+  }' specs/state.json > specs/tmp/state.json && mv specs/tmp/state.json specs/state.json
 
 # Step 2: Add artifact
 jq --arg path "$artifact_path" \
   '(.active_projects[] | select(.project_number == '$task_number')).artifacts =
-    ([(.active_projects[] | select(.project_number == '$task_number')).artifacts // [] | .[] | select(.type == "plan" | not)] + [{"path": $path, "type": "plan"}])' \
-  specs/state.json > /tmp/state.json && mv /tmp/state.json specs/state.json
+    ([(.active_projects[] | select(.project_number == '$task_number')).artifacts // [] | .[] | select(.type != "plan")] + [{"path": $path, "type": "plan"}])' \
+  specs/state.json > specs/tmp/state.json && mv specs/tmp/state.json specs/state.json
 ```
 
 ### Implementation Postflight
@@ -152,13 +119,13 @@ jq --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
     status: $status,
     last_updated: $ts,
     completed: $ts
-  }' specs/state.json > /tmp/state.json && mv /tmp/state.json specs/state.json
+  }' specs/state.json > specs/tmp/state.json && mv specs/tmp/state.json specs/state.json
 
 # Step 2: Add artifact
 jq --arg path "$artifact_path" \
   '(.active_projects[] | select(.project_number == '$task_number')).artifacts =
-    ([(.active_projects[] | select(.project_number == '$task_number')).artifacts // [] | .[] | select(.type == "summary" | not)] + [{"path": $path, "type": "summary"}])' \
-  specs/state.json > /tmp/state.json && mv /tmp/state.json specs/state.json
+    ([(.active_projects[] | select(.project_number == '$task_number')).artifacts // [] | .[] | select(.type != "summary")] + [{"path": $path, "type": "summary"}])' \
+  specs/state.json > specs/tmp/state.json && mv specs/tmp/state.json specs/state.json
 ```
 
 ### Task Recovery (from archive)
@@ -169,11 +136,11 @@ task_json=$(jq '.archived_projects[] | select(.project_number == '$task_number')
 
 # Step 2: Add to active projects
 jq --argjson task "$task_json" \
-  '.active_projects += [$task]' specs/state.json > /tmp/state.json && mv /tmp/state.json specs/state.json
+  '.active_projects += [$task]' specs/state.json > specs/tmp/state.json && mv specs/tmp/state.json specs/state.json
 
 # Step 3: Remove from archive
 jq 'del(.archived_projects[] | select(.project_number == '$task_number'))' \
-  specs/archive/state.json > /tmp/state.json && mv /tmp/state.json specs/archive/state.json
+  specs/archive/state.json > specs/tmp/archive-state.json && mv specs/tmp/archive-state.json specs/archive/state.json
 ```
 
 ### Task Abandon (to archive)
@@ -184,11 +151,11 @@ task_json=$(jq '.active_projects[] | select(.project_number == '$task_number')' 
 
 # Step 2: Add to archive
 jq --argjson task "$task_json" \
-  '.archived_projects += [$task]' specs/archive/state.json > /tmp/state.json && mv /tmp/state.json specs/archive/state.json
+  '.archived_projects += [$task]' specs/archive/state.json > specs/tmp/archive-state.json && mv specs/tmp/archive-state.json specs/archive/state.json
 
 # Step 3: Remove from active
 jq 'del(.active_projects[] | select(.project_number == '$task_number'))' \
-  specs/state.json > /tmp/state.json && mv /tmp/state.json specs/state.json
+  specs/state.json > specs/tmp/state.json && mv specs/tmp/state.json specs/state.json
 ```
 
 ## Testing Checklist
@@ -203,8 +170,8 @@ Before using jq patterns in production:
 ### Test Script
 
 ```bash
-# Create test state.json
-cat > /tmp/test-state.json << 'EOF'
+# Create test specs/state.json
+cat > specs/tmp/test-specs/state.json << 'EOF'
 {
   "active_projects": [
     {
@@ -228,13 +195,13 @@ jq --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
     status: $status,
     last_updated: $ts,
     researched: $ts
-  }' /tmp/test-state.json > /tmp/test-out.json && mv /tmp/test-out.json /tmp/test-state.json
+  }' specs/tmp/test-specs/state.json > specs/tmp/test-specs/state.json.tmp && mv specs/tmp/test-specs/state.json.tmp specs/tmp/test-specs/state.json
 
 # Step 2
 jq --arg path "$artifact_path" \
   '(.active_projects[] | select(.project_number == '$task_number')).artifacts =
-    ([(.active_projects[] | select(.project_number == '$task_number')).artifacts // [] | .[] | select(.type == "research" | not)] + [{"path": $path, "type": "research"}])' \
-  /tmp/test-state.json
+    ([(.active_projects[] | select(.project_number == '$task_number')).artifacts // [] | .[] | select(.type != "research")] + [{"path": $path, "type": "research"}])' \
+  specs/tmp/test-specs/state.json
 
 # Expected output should show status "researched" and artifact added
 ```
@@ -245,9 +212,9 @@ Reusable shell scripts are available in `.opencode/scripts/` that encapsulate co
 
 | Script | Purpose |
 |--------|---------|
-| `postflight-research.sh TASK_NUM ARTIFACT_PATH [SUMMARY]` | Update state.json after research completion |
-| `postflight-plan.sh TASK_NUM ARTIFACT_PATH [SUMMARY]` | Update state.json after plan creation |
-| `postflight-implement.sh TASK_NUM ARTIFACT_PATH [SUMMARY]` | Update state.json after implementation |
+| `postflight-research.sh TASK_NUM ARTIFACT_PATH [SUMMARY]` | Update specs/state.json after research completion |
+| `postflight-plan.sh TASK_NUM ARTIFACT_PATH [SUMMARY]` | Update specs/state.json after plan creation |
+| `postflight-implement.sh TASK_NUM ARTIFACT_PATH [SUMMARY]` | Update specs/state.json after implementation |
 
 Example usage:
 ```bash
@@ -256,7 +223,7 @@ Example usage:
 
 ## References
 
-- Claude Code Issue #1132: Bash tool escaping bug
+- OpenCode Issue #1132: Bash tool escaping bug
 - `.opencode/context/core/patterns/inline-status-update.md` - Status update patterns
 - `.opencode/rules/state-management.md` - State management rules
 - `.opencode/scripts/postflight-*.sh` - Reusable postflight scripts

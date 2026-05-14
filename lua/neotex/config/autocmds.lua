@@ -70,6 +70,11 @@ function M.setup()
     callback = function(args)
       local bufname = vim.api.nvim_buf_get_name(args.buf)
       
+      -- Ignore temp files (e.g., VimTeX compiler output in /tmp/nvim.*)
+      if bufname:find("^/tmp/") then
+        vim.v.fcs_choice = ""
+        return
+      end
       -- Check if file still exists
       if vim.fn.filereadable(bufname) == 0 then
         -- File was deleted - mark as not modified and don't reload
@@ -87,13 +92,18 @@ function M.setup()
     end,
   })
 
-  -- Auto-reload on focus and buffer entry (removed CursorHold events for performance)
-  -- CursorHold/CursorHoldI removed: caused 5-10ms lag on every cursor pause
-  -- FocusGained and BufEnter are sufficient for detecting external file changes
-  api.nvim_create_autocmd({ "FocusGained", "BufEnter" }, {
+  -- Auto-reload on focus, buffer entry, and cursor idle
+  -- CursorHold/CursorHoldI re-enabled: performance issue fixed in Neovim 0.8+ (PR #20198)
+  -- This ensures external file changes (e.g., from Claude Code) are detected promptly
+  api.nvim_create_autocmd({ "FocusGained", "BufEnter", "CursorHold", "CursorHoldI" }, {
     pattern = "*",
     callback = function()
       if vim.o.autoread and vim.fn.getcmdwintype() == '' then
+        -- Skip temp files (e.g., VimTeX compiler output in /tmp/nvim.*)
+        local bufname = vim.api.nvim_buf_get_name(0)
+        if bufname:find("^/tmp/") then
+          return
+        end
         -- Silently check for file changes
         vim.cmd('silent! checktime')
       end

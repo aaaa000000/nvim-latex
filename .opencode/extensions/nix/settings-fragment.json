@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "mcp-nixos": {
+      "command": "uvx",
+      "args": ["mcp-nixos"]
+    }
+  },
+  "permissions": {
+    "allow": [
+      "mcp__nixos__nix",
+      "mcp__nixos__nix_versions"
+    ]
+  }
+}

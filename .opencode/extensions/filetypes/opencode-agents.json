@@ -1,0 +1,40 @@
+{
+  "agent": {
+    "deck": {
+      "description": "Generate YC-style investor pitch decks in Typst using touying",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/deck-agent.md}",
+      "tools": {"read":true,"write":true,"edit":true,"glob":true,"grep":true,"bash":true,"webfetch":true,"websearch":true}
+    },
+    "document": {
+      "description": "Convert documents between formats (PDF/DOCX to Markdown, Markdown to PDF)",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/document-agent.md}",
+      "tools": {"read":true,"write":true,"edit":true,"glob":true,"grep":true,"bash":true,"webfetch":true,"websearch":true}
+    },
+    "filetypes-router": {
+      "description": "Route file format operations to specialized sub-agents based on file type",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/filetypes-router-agent.md}",
+      "tools": {"read":true,"grep":true,"glob":true}
+    },
+    "presentation": {
+      "description": "Extract presentations and generate slide decks (Beamer/Polylux/Touying)",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/presentation-agent.md}",
+      "tools": {"read":true,"write":true,"edit":true,"glob":true,"grep":true,"bash":true,"webfetch":true,"websearch":true}
+    },
+    "spreadsheet": {
+      "description": "Convert spreadsheets to LaTeX/Typst tables",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/spreadsheet-agent.md}",
+      "tools": {"read":true,"write":true,"edit":true,"glob":true,"grep":true,"bash":true,"webfetch":true,"websearch":true}
+    },
+    "sheet": {
+      "description": "XLSX creation, editing, and analysis using openpyxl and pandas",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/sheet-agent.md}",
+      "tools": {"read":true,"write":true,"edit":true,"glob":true,"grep":true,"bash":true}
+    }
+  }
+}

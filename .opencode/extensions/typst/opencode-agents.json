@@ -1,0 +1,16 @@
+{
+  "agent": {
+    "typst-implementation": {
+      "description": "Implement Typst documents following implementation plans",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/typst-implementation-agent.md}",
+      "tools": {"write":true,"edit":true,"bash":true,"read":true,"glob":true,"grep":true}
+    },
+    "typst-research": {
+      "description": "Research Typst documentation tasks using domain context and codebase exploration",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/typst-research-agent.md}",
+      "tools": {"read":true,"write":true,"edit":true,"glob":true,"grep":true,"bash":true,"webfetch":true,"websearch":true}
+    }
+  }
+}

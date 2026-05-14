@@ -4,9 +4,9 @@
 # Usage: ./postflight-plan.sh TASK_NUMBER ARTIFACT_PATH [ARTIFACT_SUMMARY]
 #
 # This script updates state.json after plan creation using the
-# two-step jq pattern to avoid Issue #1132 (OpenCode Bash tool escaping bug).
+# two-step jq pattern to avoid Issue #1132 (Claude Code Bash tool escaping bug).
 #
-# See: .opencode/context/core/patterns/jq-escaping-workarounds.md
+# See: .claude/context/patterns/jq-escaping-workarounds.md
 
 set -e
 
@@ -50,20 +50,20 @@ jq --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
     status: $status,
     last_updated: $ts,
     planned: $ts
-  }' "$state_file" > /tmp/state.json && mv /tmp/state.json "$state_file"
+  }' "$state_file" > specs/tmp/state.json && mv specs/tmp/state.json "$state_file"
 
 echo "  Status updated to 'planned'"
 
 # Step 2: Filter out existing plan artifacts (two-step pattern for Issue #1132)
 jq '(.active_projects[] | select(.project_number == '$task_number')).artifacts =
     [(.active_projects[] | select(.project_number == '$task_number')).artifacts // [] | .[] | select(.type != "plan")]' \
-  "$state_file" > /tmp/state.json && mv /tmp/state.json "$state_file"
+  "$state_file" > specs/tmp/state.json && mv specs/tmp/state.json "$state_file"
 
 # Step 3: Add new plan artifact
 jq --arg path "$artifact_path" \
    --arg summary "$artifact_summary" \
   '(.active_projects[] | select(.project_number == '$task_number')).artifacts += [{"path": $path, "type": "plan", "summary": $summary}]' \
-  "$state_file" > /tmp/state.json && mv /tmp/state.json "$state_file"
+  "$state_file" > specs/tmp/state.json && mv specs/tmp/state.json "$state_file"
 
 echo "  Artifact linked: $artifact_path"
 echo "Done."

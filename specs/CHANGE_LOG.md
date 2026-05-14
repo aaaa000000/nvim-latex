@@ -1,0 +1,199 @@
+# Change Log
+
+All notable changes to the OpenCode system.
+
+## Format
+
+Each entry includes:
+- Date
+- Task number and name
+- Type of change
+- Brief description
+
+---
+
+### 2026-05-12
+
+**Task 556: literature_awareness_planner_research**
+- Status: completed
+- Type: meta
+- Summary: Added literature awareness to planner-agent.md (Stage 4.5), lean-research-agent.md (Literature Extraction Protocol), lean4.md (Literature Fidelity section)
+
+**Task 555: update_proof_workflow_literature**
+- Status: completed
+- Type: meta
+- Summary: Added literature-first stages to lean-implementation-flow.md, end-to-end-proof-workflow.md, and proof-construction.md
+
+**Task 554: literature_fidelity_formal_policy**
+- Status: completed
+- Type: meta
+- Summary: Created literature-fidelity-policy.md (257 lines) for formal extension with 5 anti-patterns, escalation protocol, domain guidance for logic/math/physics
+
+**Task 553: literature_fidelity_lean_policy**
+- Status: completed
+- Type: meta
+- Summary: Created literature-fidelity-policy.md (126 lines) for Lean extension with 4 anti-patterns, escalation protocol, usage checklist
+
+**Task 551: fix_discord_link_session_discovery**
+- Status: completed
+- Type: neovim
+- Summary: Fixed discord-link.lua session discovery to use correct opencode CLI field names
+
+**Task 550: unify_ctrl_cr_toggle_and_agent_picker**
+- Status: completed
+- Type: neovim
+- Summary: Fixed C-CR toggle for ClaudeCode, added leader-ac agent picker keymap
+
+**Task 549: audit_relocate_temp_files**
+- Status: completed
+- Type: meta
+- Summary: Relocated ~50 /tmp/ path references to specs/tmp/ across 14 files
+
+**Task 547: research_mobile_agent_management**
+- Status: completed
+- Type: meta
+- Summary: Implemented Neovim-side Discord integration with session linking and Telescope session picker
+
+Memory harvest: 2 memories created (1 CONFIG, 1 INSIGHT) from task 547
+
+---
+
+### 2026-03-06
+
+**Task OC_150: fix_todo_orphan_detection_completed_tasks**
+- Status: completed
+- Type: meta
+- Summary: Fixed /todo orphan detection to properly handle completed tasks that appear in TODO.md but have been removed from state.json
+
+**Artifacts:**
+- specs/archive/OC_150_fix_todo_orphan_detection/reports/research-001.md - Analysis of orphan detection gap
+- specs/archive/OC_150_fix_todo_orphan_detection/reports/research-002.md - Comparative analysis of .claude/ vs .opencode/ implementations
+- specs/archive/OC_150_fix_todo_orphan_detection/plans/implementation-002.md - 5-phase implementation plan
+- specs/archive/OC_150_fix_todo_orphan_detection/summaries/implementation-summary-20260305.md - Implementation summary
+
+**Task OC_149: review_update_opencode_documentation_readme_files**
+- Status: completed
+- Type: meta
+- Summary: Created 183 new README.md files achieving 100% coverage across 197 directories in .opencode/
+
+**Artifacts:**
+- specs/archive/OC_149_review_update_opencode_documentation_readme_files/reports/research-001.md - Comprehensive audit
+- specs/archive/OC_149_review_update_opencode_documentation_readme_files/plans/implementation-001.md - 6-phase plan
+- specs/archive/OC_149_review_update_opencode_documentation_readme_files/summaries/implementation-summary-20260305.md - Implementation summary
+
+**Task OC_140: document_progressive_disclosure_patterns (TODO.md orphan)**
+- Status: completed
+- Type: meta
+- Summary: Documentation task for progressive disclosure patterns from OC_137
+
+**Artifacts:**
+- specs/archive/OC_140_document_progressive_disclosure_patterns/reports/research-001.md - Documentation requirements
+
+**Task OC_139: implement_stage_progressive_loading_demo (TODO.md orphan)**
+- Status: completed
+- Type: meta
+- Summary: Research on stage-progressive loading for 40-50% context reduction
+
+**Artifacts:**
+- specs/archive/OC_139_implement_stage_progressive_loading_demo/reports/research-001.md - POC for progressive context loading
+- specs/archive/OC_139_implement_stage_progressive_loading_demo/reports/research-002.md - Systematic review of 11 skills
+- specs/archive/OC_139_implement_stage_progressive_loading_demo/plans/implementation-001.md - 3-phase implementation plan
+
+**Task OC_138: fix_plan_metadata_status_synchronization (TODO.md orphan)**
+- Status: completed
+- Type: meta
+- Summary: Research on three-way status synchronization gap between state.json, TODO.md, and plan files
+
+**Artifacts:**
+- specs/archive/OC_138_fix_plan_metadata_status_synchronization/reports/research-001.md - Root cause analysis
+
+**Task OC_145: restore_settings_json_and_state_sync (ORPHAN)**
+- Status: orphan_deleted
+- Type: meta
+- Summary: Empty orphaned directory with no state.json entry, removed during archival
+
+**Directory Operations:**
+- Moved 5 task directories to specs/archive/
+- Deleted 1 empty orphaned directory (OC_145)
+
+---
+
+### 2026-03-05
+
+**Task OC_142: implement_knowledge_capture_system**
+- Status: completed
+- Type: meta
+- Summary: Implemented comprehensive knowledge capture system with three integrated features
+
+**Changes:**
+1. **Renamed /learn to /fix** (clean-break, NO backwards compatibility)
+   - Removed: .opencode/commands/learn.md
+   - Removed: .opencode/skills/skill-learn/
+   - Created: .opencode/commands/fix.md
+   - Created: .opencode/skills/skill-fix/
+   - Updated: All documentation references across codebase
+   - Migration: Use `/fix` instead of `/learn`
+
+2. **Added task mode to /remember**
+   - New syntax: `/remember --task OC_N`
+   - Scans task artifacts (reports/, plans/, summaries/, code/)
+   - Interactive artifact selection with multiSelect
+   - 5-category classification taxonomy:
+     * [TECHNIQUE] - Reusable method or approach
+     * [PATTERN] - Design or implementation pattern  
+     * [CONFIG] - Configuration or setup knowledge
+     * [WORKFLOW] - Process or procedure
+     * [INSIGHT] - Key learning or understanding
+     * [SKIP] - Not valuable for memory
+
+3. **Enhanced /todo with skill-todo**
+   - Extracted embedded logic into dedicated skill
+   - Added automatic CHANGE_LOG.md updates on archival
+   - Added memory harvest suggestions from completed task artifacts
+   - Interactive memory creation from task insights
+
+**Breaking Changes:**
+- `/learn` command completely removed (use `/fix` instead)
+- No aliases, fallbacks, or backwards compatibility
+- Muscle memory will need retraining
+
+**Artifacts:**
+- .opencode/commands/fix.md - New command (renamed from learn.md)
+- .opencode/skills/skill-todo/SKILL.md - New skill definition
+- .opencode/skills/skill-fix/SKILL.md - New skill (renamed from skill-learn)
+- .opencode/commands/remember.md - Updated with --task mode
+- .opencode/skills/skill-remember/SKILL.md - Updated with task mode
+- specs/CHANGE_LOG.md - New changelog file
+
+**Documentation Updated:**
+- .opencode/commands/README.md
+- .opencode/README.md
+- .opencode/docs/guides/user-guide.md
+- .opencode/docs/guides/component-selection.md
+- .opencode/docs/guides/documentation-audit-checklist.md
+
+---
+
+### 2026-03-05
+
+**Task OC_143: fix_skill_researcher_todo_linking**
+- Status: completed
+- Type: meta
+- Summary: Fixed regression in skill-researcher where research reports were not being linked in TODO.md
+
+**Root Cause:**
+Missing `metadata_file_path` parameter in Stage 3 delegation prompt. The general-research-agent requires this parameter to know where to write its `.return-meta.json` file.
+
+**Fix Applied:**
+Added JSON delegation context to skill-researcher/SKILL.md Stage 3 including:
+- `task_context` with task number, name, and language
+- `metadata` with session_id, delegation_depth, and delegation_path
+- `metadata_file_path` pointing to expected metadata file location
+
+**Files Modified:**
+- .opencode/skills/skill-researcher/SKILL.md - Added metadata_file_path parameter (lines 78-108)
+
+**Memories Harvested:**
+- [PATTERN] Metadata Delegation Pattern with .return-meta.json
+
+---

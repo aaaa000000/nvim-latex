@@ -1,0 +1,19 @@
+# .sync-exclude - Source-side exclusion for sync operations
+#
+# Format:
+#   - Non-comment, non-empty lines are treated as relative paths to exclude
+#     from sync (relative to the base directory, e.g., .claude/)
+#   - Lines starting with "# audit-pattern:" define Lua patterns used for
+#     post-sync content auditing (non-blocking warnings only)
+#   - Regular comment lines (starting with #) are ignored
+#
+# Path exclusions: files that should never be synced to target repositories
+# (relative to base_dir, e.g., context/orchestration/routing.md)
+
+# Audit patterns: Lua patterns checked against synced file content after sync.
+# Matches produce non-blocking warnings to help identify repo-specific leakage.
+# These patterns use Lua string.find() syntax (case-insensitive matching).
+# audit-pattern: neovim
+# audit-pattern: neotex
+# audit-pattern: lazy%.nvim
+# audit-pattern: nvim%-lspconfig

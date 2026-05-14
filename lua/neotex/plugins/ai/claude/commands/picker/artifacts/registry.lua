@@ -3,6 +3,47 @@
 
 local M = {}
 
+-- Hook event descriptions (short for picker display, long for previewer)
+-- Consolidates previously duplicate tables from entries.lua and previewer.lua
+M.HOOK_EVENT_DESCRIPTIONS = {
+  Stop = {
+    short = "After command completion",
+    long = "Triggered after command completion",
+  },
+  SessionStart = {
+    short = "When session begins",
+    long = "When Claude Code session begins",
+  },
+  SessionEnd = {
+    short = "When session ends",
+    long = "When Claude Code session ends",
+  },
+  SubagentStop = {
+    short = "After subagent completes",
+    long = "After subagent completes",
+  },
+  Notification = {
+    short = "Permission/idle events",
+    long = "Permission or idle notification events",
+  },
+  PreToolUse = {
+    short = "Before tool execution",
+    long = "Before tool execution",
+  },
+  PostToolUse = {
+    short = "After tool execution",
+    long = "After tool execution",
+  },
+  UserPromptSubmit = {
+    short = "When prompt submitted",
+    long = "When user prompt submitted",
+  },
+  PreCompact = {
+    short = "Before context compaction",
+    long = "Before context compaction",
+  },
+}
+
 -- Artifact type configurations
 -- Each artifact type defines its scanning, display, and behavior characteristics
 M.ARTIFACT_TYPES = {

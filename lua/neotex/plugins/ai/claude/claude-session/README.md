@@ -81,9 +81,10 @@ Claude terminal buffer and window management.
 Claude Code integration coordinator.
 
 **Key Features:**
-- Session initialization
-- Terminal coordination
-- Integration with Claude Code plugin
+- `open_with_command(cmd)` - Open Claude with an arbitrary CLI flag (e.g. `claude --resume <id>`). Closes any live instances first so the new command is used for a fresh process rather than toggling the existing window.
+- `continue()` - Open Claude in `--continue` mode (resumes the most recent conversation). Evicts existing instances before toggling so the `--continue` flag is honoured even when a session is already running.
+- `resume_session(session_id)` - Resume a specific session by ID via the session manager.
+- `open()` - Simple toggle with no flags.
 
 ### git.lua
 Git operations for session management.

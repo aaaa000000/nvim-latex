@@ -2,7 +2,7 @@
 
 **Last Verified**: 2026-01-19
 
-This document provides a high-level overview of the Neovim Configuration agent system architecture for users and developers.
+This document provides a high-level overview of the agent system architecture for users and developers.
 
 ---
 
@@ -15,50 +15,50 @@ The agent system uses a three-layer architecture that separates user interaction
                              |
                              | /command args
                              v
-    +-----------------------------------------------------+
-    |                   LAYER 1: COMMANDS                  |
-    |                                                      |
-    |   .claude/commands/                                  |
-    |   ├── research.md      Parse arguments              |
-    |   ├── plan.md          Route by language            |
-    |   ├── implement.md     Minimal logic                |
-    |   └── ...                                            |
-    +-----------------------------------------------------+
+    ┌─────────────────────────────────────────────────────┐
+    │                   LAYER 1: COMMANDS                  │
+    │                                                      │
+    │   .claude/commands/                                  │
+    │   ├── research.md      Parse arguments              │
+    │   ├── plan.md          Route by language            │
+    │   ├── implement.md     Minimal logic                │
+    │   └── ...                                            │
+    └─────────────────────────────────────────────────────┘
                              |
                              | Delegation context
                              v
-    +-----------------------------------------------------+
-    |                   LAYER 2: SKILLS                    |
-    |                                                      |
-    |   .claude/skills/skill-*/SKILL.md                   |
-    |   ├── skill-neovim-research/   Validate inputs      |
-    |   ├── skill-researcher/        Prepare context      |
-    |   ├── skill-planner/           Invoke agents        |
-    |   └── ...                                            |
-    +-----------------------------------------------------+
+    ┌─────────────────────────────────────────────────────┐
+    │                   LAYER 2: SKILLS                    │
+    │                                                      │
+    │   .claude/skills/skill-*/SKILL.md                   │
+    │   ├── skill-researcher/        Validate inputs      │
+    │   ├── skill-planner/           Prepare context      │
+    │   ├── skill-planner/           Invoke agents        │
+    │   └── ...                                            │
+    └─────────────────────────────────────────────────────┘
                              |
                              | Task tool invocation
                              v
-    +-----------------------------------------------------+
-    |                   LAYER 3: AGENTS                    |
-    |                                                      |
-    |   .claude/agents/*.md                               |
-    |   ├── neovim-research-agent.md Full execution       |
-    |   ├── general-research-agent.md  Create artifacts   |
-    |   ├── planner-agent.md         Return JSON          |
-    |   └── ...                                            |
-    +-----------------------------------------------------+
+    ┌─────────────────────────────────────────────────────┐
+    │                   LAYER 3: AGENTS                    │
+    │                                                      │
+    │   .claude/agents/*.md                               │
+    │   ├── general-research-agent.md  Full execution     │
+    │   ├── general-implementation-agent.md Create artifacts│
+    │   ├── planner-agent.md         Return JSON          │
+    │   └── ...                                            │
+    └─────────────────────────────────────────────────────┘
                              |
                              | Artifacts
                              v
-    +-----------------------------------------------------+
-    |                     ARTIFACTS                        |
-    |                                                      |
-    |   specs/{NNN}_{SLUG}/                                  |
-    |   ├── reports/research-001.md                       |
-    |   ├── plans/implementation-001.md                   |
-    |   └── summaries/implementation-summary-{DATE}.md    |
-    +-----------------------------------------------------+
+    ┌─────────────────────────────────────────────────────┐
+    │                     ARTIFACTS                        │
+    │                                                      │
+    │   specs/{NNN}_{SLUG}/                                  │
+    │   ├── reports/01_{short-slug}.md                    │
+    │   ├── plans/02_{short-slug}.md                      │
+    │   └── summaries/03_{short-slug}-summary.md          │
+    └─────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -86,6 +86,11 @@ Commands are user-facing entry points invoked via `/command` syntax. They:
 | `/errors` | Analyze errors |
 | `/todo` | Archive completed tasks |
 | `/meta` | System builder |
+| `/fix-it` | Scan for FIX:/NOTE:/TODO:/QUESTION: tags |
+| `/refresh` | Clean orphaned processes and old files |
+| `/tag` | Create semantic version tag (user-only) |
+| `/spawn` | Spawn new tasks to unblock blocked task |
+| `/merge` | Create pull/merge request |
 
 ### Skills (Layer 2)
 
@@ -100,12 +105,16 @@ Skills are thin wrappers that validate inputs and delegate to agents. They:
 **Key skills**:
 | Skill | Agent | Purpose |
 |-------|-------|---------|
-| skill-neovim-research | neovim-research-agent | Neovim/plugin research |
 | skill-researcher | general-research-agent | General web/codebase research |
 | skill-planner | planner-agent | Create implementation plans |
 | skill-implementer | general-implementation-agent | General file implementation |
-| skill-neovim-implementation | neovim-implementation-agent | Neovim configuration implementation |
-| skill-latex-implementation | latex-implementation-agent | LaTeX document implementation |
+| skill-meta | meta-builder-agent | System building and task creation |
+| skill-status-sync | (direct execution) | Atomic status updates |
+| skill-orchestrator | (direct execution) | Route commands to appropriate workflows |
+| skill-git-workflow | (direct execution) | Create scoped git commits |
+| skill-spawn | spawn-agent | Analyze blockers and spawn new tasks |
+
+**Note**: Additional skills are available via extensions in `.claude/extensions/`. See [CLAUDE.md](../../CLAUDE.md) for the complete skill-to-agent mapping.
 
 ### Agents (Layer 3)
 
@@ -126,19 +135,19 @@ When you run `/research 1`:
 ```
 1. Command: research.md
    - Parse: task_number = 1
-   - Lookup: language = "neovim" (from state.json)
-   - Route: skill-neovim-research
+   - Lookup: task_type = "general" (from state.json)
+   - Route: skill-researcher
 
-2. Skill: skill-neovim-research
+2. Skill: skill-researcher
    - Generate session_id: sess_1736700000_abc123
-   - Validate: task exists, status allows research
+   - Validate: task exists, status is not terminal
    - Prepare: delegation context
-   - Invoke: neovim-research-agent via Task tool
+   - Invoke: general-research-agent via Task tool
 
-3. Agent: neovim-research-agent
-   - Load: Neovim context files
-   - Execute: Search documentation, analyze plugins
-   - Create: specs/1_{slug}/reports/research-001.md
+3. Agent: general-research-agent
+   - Load: relevant context files
+   - Execute: Search documentation, analyze codebase
+   - Create: specs/001_{slug}/reports/01_{short-slug}.md
    - Return: {"status": "researched", "artifacts": [...]}
 
 4. Postflight:
@@ -174,18 +183,19 @@ This ensures:
 
 ---
 
-## Language-Based Routing
+## Task-Type-Based Routing
 
-Tasks route to specialized skills based on their `language` field:
+Tasks route to specialized skills based on their `task_type` field:
 
-| Language | Research | Implementation |
+| Task Type | Research | Implementation |
 |----------|----------|----------------|
-| `neovim` | skill-neovim-research | skill-neovim-implementation |
 | `general` | skill-researcher | skill-implementer |
 | `meta` | skill-researcher | skill-implementer |
-| `latex` | skill-researcher | skill-latex-implementation |
+| `markdown` | skill-researcher | skill-implementer |
 
-The language is automatically detected from task description or can be set explicitly.
+The task type is automatically detected from task description or can be set explicitly.
+
+**Note**: Additional task types (nix, latex, typst, python, etc.) are available via extensions in `.claude/extensions/`.
 
 ---
 
@@ -214,11 +224,11 @@ Updates use two-phase commit:
 │   ├── plan.md
 │   └── ...
 ├── skills/             # Layer 2: Skills
-│   ├── skill-neovim-research/
+│   ├── skill-researcher/
 │   │   └── SKILL.md
 │   └── ...
 ├── agents/             # Layer 3: Agents
-│   ├── neovim-research-agent.md
+│   ├── general-research-agent.md
 │   └── ...
 ├── rules/              # Automatic behavior rules
 ├── context/            # Domain knowledge
@@ -239,10 +249,10 @@ Updates use two-phase commit:
 
 ### Adding New Language Support
 
-To add support for a new language (e.g., Python):
+To add support for a new language (e.g., Rust):
 
-1. Create skill: `.claude/skills/skill-python-research/SKILL.md`
-2. Create agent: `.claude/agents/python-research-agent.md`
+1. Create skill: `.claude/skills/skill-rust-research/SKILL.md`
+2. Create agent: `.claude/agents/rust-research-agent.md`
 3. Update routing in existing commands
 
 ### Adding New Commands
@@ -278,4 +288,4 @@ See the guides in `.claude/docs/guides/` for detailed instructions.
 
 ### Agent-Facing Documentation
 
-- [Agent System Overview](../../context/core/architecture/system-overview.md) - Detailed architecture for agents (includes skill patterns, command mapping matrix)
+- [Agent System Overview](../../context/architecture/system-overview.md) - Detailed architecture for agents (includes skill patterns, command mapping matrix)

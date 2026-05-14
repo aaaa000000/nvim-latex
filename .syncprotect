@@ -1,0 +1,6 @@
+# Syncprotect: files listed here will not be overwritten during sync operations.
+# One path per line, relative to the base directory (e.g., .claude/).
+# Lines starting with # are comments; blank lines are ignored.
+
+context/repo/project-overview.md
+output/implementation-001.md

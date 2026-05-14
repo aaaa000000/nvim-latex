@@ -14,14 +14,14 @@ this skill handles all postflight operations (status update, artifact linking, g
 ## Context References
 
 Reference (do not load eagerly):
-- Path: `.claude/context/core/formats/return-metadata-file.md` - Metadata file schema
-- Path: `.claude/context/core/patterns/postflight-control.md` - Marker file protocol
-- Path: `.claude/context/core/patterns/jq-escaping-workarounds.md` - jq escaping patterns
+- Path: `.claude/context/formats/return-metadata-file.md` - Metadata file schema
+- Path: `.claude/context/patterns/postflight-control.md` - Marker file protocol
+- Path: `.claude/context/patterns/jq-escaping-workarounds.md` - jq escaping patterns
 
 ## Trigger Conditions
 
 This skill activates when:
-- Task language is "neovim"
+- Task type is "neovim"
 - Implementation plan exists for the task
 - Neovim configuration changes need to be applied
 
@@ -47,13 +47,13 @@ if [ -z "$task_data" ]; then
 fi
 
 # Extract fields
-language=$(echo "$task_data" | jq -r '.language // "neovim"')
+task_type=$(echo "$task_data" | jq -r '.task_type // "neovim"')
 status=$(echo "$task_data" | jq -r '.status')
 project_name=$(echo "$task_data" | jq -r '.project_name')
 
 # Find plan file (use padded directory number)
 padded_num=$(printf "%03d" "$task_number")
-plan_path="specs/${padded_num}_${project_name}/plans/implementation-001.md"
+plan_path="specs/${padded_num}_${project_name}/plans/02_implementation-plan.md"
 if [ ! -f "$plan_path" ]; then
   return error "Plan not found: $plan_path"
 fi
@@ -65,29 +65,8 @@ fi
 
 Update task status to "implementing" BEFORE invoking subagent.
 
-**Update state.json**:
 ```bash
-jq --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-   --arg status "implementing" \
-   --arg sid "$session_id" \
-  '(.active_projects[] | select(.project_number == '$task_number')) |= . + {
-    status: $status,
-    last_updated: $ts,
-    session_id: $sid
-  }' specs/state.json > /tmp/state.json && mv /tmp/state.json specs/state.json
-```
-
-**Update TODO.md**: Use Edit tool to change status marker to `[IMPLEMENTING]`.
-
-**Update plan file** (if exists): Update the Status field in plan metadata:
-```bash
-# Find latest plan file
-plan_file=$(ls -1 "specs/${padded_num}_${project_name}/plans/implementation-"*.md 2>/dev/null | sort -V | tail -1)
-if [ -n "$plan_file" ] && [ -f "$plan_file" ]; then
-    # Try bullet pattern first, then non-bullet pattern
-    sed -i 's/^\- \*\*Status\*\*: \[.*\]$/- **Status**: [IMPLEMENTING]/' "$plan_file"
-    sed -i 's/^\*\*Status\*\*: \[.*\]$/**Status**: [IMPLEMENTING]/' "$plan_file"
-fi
+bash .claude/scripts/update-task-status.sh preflight "$task_number" implement "$session_id"
 ```
 
 ---
@@ -123,9 +102,9 @@ EOF
     "task_number": N,
     "task_name": "{project_name}",
     "description": "{description}",
-    "language": "neovim"
+    "task_type": "neovim"
   },
-  "plan_path": "specs/{NNN}_{SLUG}/plans/implementation-001.md",
+  "plan_path": "specs/{NNN}_{SLUG}/plans/02_implementation-plan.md",
   "metadata_file_path": "specs/{NNN}_{SLUG}/.return-meta.json"
 }
 ```
@@ -179,7 +158,25 @@ This validation:
 
 ---
 
+### Stage 5b: Self-Execution Fallback
+
+**CRITICAL**: If you performed the work above WITHOUT using the Task tool (i.e., you read files,
+wrote artifacts, or updated metadata directly instead of spawning a subagent), you MUST write a
+`.return-meta.json` file now before proceeding to postflight. Use the schema from
+`return-metadata-file.md` with the appropriate status value for this operation.
+
+If you DID use the Task tool, skip this stage -- the subagent already wrote the metadata.
+
+---
+
+## Postflight (ALWAYS EXECUTE)
+
+The following stages MUST execute after work is complete, whether the work was done by a
+subagent or inline (Stage 5b). Do NOT skip these stages for any reason.
+
 ### Stage 6: Parse Subagent Return
+
+Read the metadata file:
 
 ```bash
 metadata_file="specs/${padded_num}_${project_name}/.return-meta.json"
@@ -201,50 +198,26 @@ fi
 
 ### Stage 7: Update Task Status (Postflight)
 
-If status is "implemented", update state.json and TODO.md.
+If status is "implemented":
 
-**Update state.json**:
 ```bash
-jq --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-   --arg status "completed" \
-  '(.active_projects[] | select(.project_number == '$task_number')) |= . + {
-    status: $status,
-    last_updated: $ts,
-    completed: $ts
-  }' specs/state.json > /tmp/state.json && mv /tmp/state.json specs/state.json
+bash .claude/scripts/update-task-status.sh postflight "$task_number" implement "$session_id"
+```
 
-# Add completion_summary (always required for completed tasks)
+Then add completion_data to state.json (not covered by centralized script):
+```bash
+# Add completion_summary if present
 if [ -n "$completion_summary" ]; then
     jq --arg summary "$completion_summary" \
       '(.active_projects[] | select(.project_number == '$task_number')).completion_summary = $summary' \
-      specs/state.json > /tmp/state.json && mv /tmp/state.json specs/state.json
+      specs/state.json > specs/tmp/state.json && mv specs/tmp/state.json specs/state.json
 fi
 
-# Add roadmap_items (if present and non-empty)
-if [ "$roadmap_items" != "[]" ] && [ -n "$roadmap_items" ]; then
+# Add roadmap_items if present (for non-meta tasks only)
+if [ "$task_type" != "meta" ] && [ "$roadmap_items" != "[]" ] && [ -n "$roadmap_items" ]; then
     jq --argjson items "$roadmap_items" \
       '(.active_projects[] | select(.project_number == '$task_number')).roadmap_items = $items' \
-      specs/state.json > /tmp/state.json && mv /tmp/state.json specs/state.json
-fi
-```
-
-**Update TODO.md**: Use Edit tool to change status marker to `[COMPLETED]`.
-
-**Update plan file** (if exists): Update the Status field to `[COMPLETED]` with verification:
-```bash
-plan_file=$(ls -1 "specs/${padded_num}_${project_name}/plans/implementation-"*.md 2>/dev/null | sort -V | tail -1)
-if [ -n "$plan_file" ] && [ -f "$plan_file" ]; then
-    # Try bullet pattern first, then non-bullet pattern
-    sed -i 's/^\- \*\*Status\*\*: \[.*\]$/- **Status**: [COMPLETED]/' "$plan_file"
-    sed -i 's/^\*\*Status\*\*: \[.*\]$/**Status**: [COMPLETED]/' "$plan_file"
-    # Verify update
-    if grep -qE '^\*\*Status\*\*: \[COMPLETED\]|^\- \*\*Status\*\*: \[COMPLETED\]' "$plan_file"; then
-        echo "Plan file status updated to [COMPLETED]"
-    else
-        echo "WARNING: Could not verify plan file status update"
-    fi
-else
-    echo "INFO: No plan file found to update (file: $plan_file)"
+      specs/state.json > specs/tmp/state.json && mv specs/tmp/state.json specs/state.json
 fi
 ```
 
@@ -257,27 +230,14 @@ jq --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
   '(.active_projects[] | select(.project_number == '$task_number')) |= . + {
     last_updated: $ts,
     resume_phase: ($phase + 1)
-  }' specs/state.json > /tmp/state.json && mv /tmp/state.json specs/state.json
+  }' specs/state.json > specs/tmp/state.json && mv specs/tmp/state.json specs/state.json
 ```
 
 TODO.md stays as `[IMPLEMENTING]`.
 
-**Update plan file** (if exists): Update the Status field to `[PARTIAL]` with verification:
+**Update plan file** (if exists): Update the Status field to `[PARTIAL]`:
 ```bash
-plan_file=$(ls -1 "specs/${padded_num}_${project_name}/plans/implementation-"*.md 2>/dev/null | sort -V | tail -1)
-if [ -n "$plan_file" ] && [ -f "$plan_file" ]; then
-    # Try bullet pattern first, then non-bullet pattern
-    sed -i 's/^\- \*\*Status\*\*: \[.*\]$/- **Status**: [PARTIAL]/' "$plan_file"
-    sed -i 's/^\*\*Status\*\*: \[.*\]$/**Status**: [PARTIAL]/' "$plan_file"
-    # Verify update
-    if grep -qE '^\*\*Status\*\*: \[PARTIAL\]|^\- \*\*Status\*\*: \[PARTIAL\]' "$plan_file"; then
-        echo "Plan file status updated to [PARTIAL]"
-    else
-        echo "WARNING: Could not verify plan file status update"
-    fi
-else
-    echo "INFO: No plan file found to update (directory: specs/${padded_num}_${project_name}/plans/)"
-fi
+.claude/scripts/update-plan-status.sh "$task_number" "$project_name" "PARTIAL"
 ```
 
 **On failed**: Keep status as "implementing" for retry. Do not update plan file (leave as `[IMPLEMENTING]` for retry).
@@ -288,6 +248,8 @@ fi
 
 Add implementation artifacts to state.json.
 
+**Update TODO.md**: Link artifact using count-aware format. Apply the four-case Edit logic from `@.claude/context/patterns/artifact-linking-todo.md` with `field_name=**Summary**`, `next_field=**Description**`.
+
 ---
 
 ### Stage 9: Git Commit
@@ -297,8 +259,6 @@ git add -A
 git commit -m "task ${task_number}: complete implementation
 
 Session: ${session_id}
-
-Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ```
 
 ---
@@ -319,7 +279,7 @@ Implementation completed for task {N}:
 - Executed {phases_completed}/{phases_total} phases
 - Created/modified Neovim config files
 - Verified startup and module loading
-- Created summary at specs/{NNN}_{SLUG}/summaries/implementation-summary-{DATE}.md
+- Created summary at specs/{NNN}_{SLUG}/summaries/MM_{short-slug}-summary.md
 - Status updated to [COMPLETED]
 - Changes committed
 ```
@@ -339,6 +299,29 @@ If nvim --headless fails:
 
 ### Git Commit Failure
 Non-blocking: Log failure but continue.
+
+---
+
+## MUST NOT (Postflight Boundary)
+
+After the agent returns, this skill MUST NOT:
+
+1. **Edit Lua files** - All Neovim config work is done by agent
+2. **Run nvim --headless** - Verification is done by agent
+3. **Analyze or grep source** - Analysis is agent work
+4. **Write summary/reports** - Artifact creation is agent work
+
+> **PROHIBITION**: If the subagent returned partial or failed status, the lead skill MUST NOT attempt to continue, complete, or "fill in" the subagent's work. Report the partial/failed status and let the user re-run `/implement` to resume.
+
+The postflight phase is LIMITED TO:
+- Reading agent metadata file
+- Updating state.json via jq
+- Updating TODO.md status marker via Edit
+- Linking artifacts in state.json
+- Git commit
+- Cleanup of temp/marker files
+
+Reference: @.claude/context/standards/postflight-tool-restrictions.md
 
 ---
 

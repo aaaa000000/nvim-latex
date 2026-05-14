@@ -36,6 +36,17 @@ function M.open_with_command(command)
       error("claude-code config not initialized")
     end
 
+    -- Close any live instances so toggle() opens a fresh process with the new command.
+    -- Without this, toggle() finds the existing terminal and just shows/hides it.
+    if claude_code.claude_code and type(claude_code.claude_code.instances) == "table" then
+      for id, bufnr in pairs(claude_code.claude_code.instances) do
+        if vim.api.nvim_buf_is_valid(bufnr) then
+          pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
+        end
+        claude_code.claude_code.instances[id] = nil
+      end
+    end
+
     -- Execute the toggle
     local toggle_success = claude_code.toggle()
 
@@ -107,6 +118,23 @@ function M.continue()
 
   -- Enhanced variant detection with fallback
   local success, result = session_manager.capture_errors(function()
+    -- Close any live instances before toggling. toggle_with_variant and toggle() both check
+    -- the instances table and will just show/hide the existing window if an entry is present,
+    -- ignoring the --continue flag. Evicting the entry forces a fresh process.
+    if claude_code.claude_code and type(claude_code.claude_code.instances) == "table" then
+      local ids = {}
+      for id in pairs(claude_code.claude_code.instances) do
+        ids[#ids + 1] = id
+      end
+      for _, id in ipairs(ids) do
+        local bufnr = claude_code.claude_code.instances[id]
+        if vim.api.nvim_buf_is_valid(bufnr) then
+          pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
+        end
+        claude_code.claude_code.instances[id] = nil
+      end
+    end
+
     -- Try variant system first if available
     if claude_code.config and
        claude_code.config.command_variants and

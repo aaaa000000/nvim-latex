@@ -1,0 +1,46 @@
+{
+  "agent": {
+    "code-reviewer": {
+      "description": "Review code for security, performance, and maintainability",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/code-reviewer-agent.md}",
+      "tools": {"read":true,"write":true,"edit":true,"glob":true,"grep":true,"bash":true,"webfetch":true,"websearch":true}
+    },
+    "general-implementation": {
+      "description": "Implement general, meta, and markdown tasks from plans",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/general-implementation-agent.md}",
+      "tools": {"write":true,"edit":true,"bash":true,"read":true,"glob":true,"grep":true}
+    },
+    "general-research": {
+      "description": "Research general tasks using web search and codebase exploration",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/general-research-agent.md}",
+      "tools": {"read":true,"write":true,"edit":true,"glob":true,"grep":true,"bash":true,"webfetch":true,"websearch":true}
+    },
+    "meta-builder": {
+      "description": "Interactive system builder for .opencode/ architecture changes",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/meta-builder-agent.md}",
+      "tools": {"read":true,"write":true,"edit":true,"glob":true,"grep":true,"bash":true,"webfetch":true,"websearch":true}
+    },
+    "planner": {
+      "description": "Create phased implementation plans from research findings",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/planner-agent.md}",
+      "tools": {"read":true,"write":true,"edit":true,"glob":true,"grep":true,"bash":true,"webfetch":true,"websearch":true}
+    },
+    "reviser": {
+      "description": "Revise implementation plans by synthesizing existing plans with new research findings",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/reviser-agent.md}",
+      "tools": {"read":true,"write":true,"edit":true,"glob":true,"grep":true,"bash":true,"webfetch":true,"websearch":true}
+    },
+    "spawn": {
+      "description": "Analyzes blocked tasks, researches blockers, and proposes minimal new tasks to overcome the blocker",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/spawn-agent.md}",
+      "tools": {"read":true,"write":true,"edit":true,"glob":true,"grep":true,"bash":true,"webfetch":true,"websearch":true}
+    }
+  }
+}

@@ -34,7 +34,9 @@ return {
       popd_cmd = "popd >/dev/null 2>&1",    -- Suppress popd output
     },
 
-    -- Base command
+    -- Base command (model set via ~/.claude/settings.local.json, not --model flag)
+    -- Note: passing --model via CLI flag bypasses Claude Max's 1M context window;
+    -- Claude Code reads settings.local.json natively and uses Max plan routing.
     command = "claude --dangerously-skip-permissions",
 
     -- Command variants for different modes

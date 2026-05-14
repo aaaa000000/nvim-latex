@@ -9,34 +9,6 @@ local previewers = require("telescope.previewers")
 -- Maximum lines for doc previews (to avoid performance issues)
 local MAX_PREVIEW_LINES = 150
 
---- Helper function to scan directory for sync info
---- @param global_dir string Global directory
---- @param project_dir string Project directory
---- @param subdir string Subdirectory path
---- @param extension string File extension pattern
---- @return table Array of file sync info
-local function scan_directory_for_sync(global_dir, project_dir, subdir, extension)
-  local global_path = global_dir .. "/.claude/" .. subdir
-  local local_path = project_dir .. "/.claude/" .. subdir
-  local global_files = vim.fn.glob(global_path .. "/" .. extension, false, true)
-
-  local files = {}
-  for _, global_file in ipairs(global_files) do
-    local filename = vim.fn.fnamemodify(global_file, ":t")
-    local local_file = local_path .. "/" .. filename
-
-    local action = vim.fn.filereadable(local_file) == 1 and "replace" or "copy"
-    table.insert(files, {
-      name = filename,
-      global_path = global_file,
-      local_path = local_file,
-      action = action,
-    })
-  end
-
-  return files
-end
-
 --- Count operations by action type
 --- @param files table Array of file sync info
 --- @return number copy_count Number of copy operations
@@ -62,8 +34,11 @@ local function preview_heading(self, entry)
   local readme_path = nil
 
   local scan_mod = require("neotex.plugins.ai.claude.commands.picker.utils.scan")
-  local local_path = vim.fn.getcwd() .. "/.claude/" .. ordinal .. "/README.md"
-  local global_path = scan_mod.get_global_dir() .. "/.claude/" .. ordinal .. "/README.md"
+  local entry_config = entry.value.config
+  local base_dir = (entry_config and entry_config.base_dir) or ".claude"
+  local global_dir = (entry_config and entry_config.global_source_dir) or scan_mod.get_global_dir()
+  local local_path = vim.fn.getcwd() .. "/" .. base_dir .. "/" .. ordinal .. "/README.md"
+  local global_path = global_dir .. "/" .. base_dir .. "/" .. ordinal .. "/README.md"
 
   if vim.fn.filereadable(local_path) == 1 then
     readme_path = local_path
@@ -113,9 +88,11 @@ end
 
 --- Create preview for help entry (keyboard shortcuts)
 --- @param self table Telescope previewer state
-local function preview_help(self)
+--- @param config table|nil Picker configuration with base_dir
+local function preview_help(self, config)
   local scan_mod = require("neotex.plugins.ai.claude.commands.picker.utils.scan")
   local global_dir = scan_mod.get_global_dir()
+  local base_dir = (config and config.base_dir) or ".claude"
 
   vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, {
     "Keyboard Shortcuts:",
@@ -158,79 +135,87 @@ local function preview_help(self)
     "  [Tests]        - Test suites",
     "",
     "Indicators:",
-    "  *       - Artifact defined locally in project (.claude/)",
-    "            Otherwise a global artifact from " .. global_dir .. "/.claude/",
+    "  *       - Artifact defined locally in project (" .. base_dir .. "/)",
+    "            Otherwise a global artifact from " .. global_dir .. "/" .. base_dir .. "/",
     "",
     "File Operations:",
     "  Ctrl-l/u/s  - Commands, Hooks, Skills, Templates, Lib, Docs",
     "  Ctrl-e      - Edit file (all artifact types)",
     "                Preserves executable permissions for .sh files",
     "",
-    "  [Load All] - Batch synchronizes all artifact types",
-    "               including commands, hooks, skills, and docs.",
-    "               Replaces local with global artifacts with the same",
-    "               name while preserving local-only artifacts.",
+    "  [Load Core] - Batch synchronizes core system artifacts",
+    "                (excludes extension-owned agents, skills, etc.)",
+    "                Replaces local with global artifacts with the same",
+    "                name while preserving local-only artifacts.",
     "",
     "Notes: All artifacts loaded from both project and global directories",
     "       Local artifacts override global ones from " .. global_dir .. "/"
   })
 end
 
---- Create preview for Load All entry
+--- Create preview for Load Core Agent System entry
+--- Uses sync.scan_all_artifacts for accurate counts matching actual sync operation
 --- @param self table Telescope previewer state
-local function preview_load_all(self)
+--- @param config table|nil Picker configuration with base_dir
+local function preview_load_all(self, config)
   local project_dir = vim.fn.getcwd()
   local scan = require("neotex.plugins.ai.claude.commands.picker.utils.scan")
+  local sync_ops = require("neotex.plugins.ai.claude.commands.picker.operations.sync")
   local global_dir = scan.get_global_dir()
+  local base_dir = (config and config.base_dir) or ".claude"
 
-  local commands = scan_directory_for_sync(global_dir, project_dir, "commands", "*.md")
-  local hooks = scan_directory_for_sync(global_dir, project_dir, "hooks", "*.sh")
-  local skills = scan_directory_for_sync(global_dir, project_dir, "skills", "*.md")
-  local templates = scan_directory_for_sync(global_dir, project_dir, "templates", "*.yaml")
-  local lib_utils = scan_directory_for_sync(global_dir, project_dir, "lib", "*.sh")
-  local docs = scan_directory_for_sync(global_dir, project_dir, "docs", "*.md")
-  local scripts = scan_directory_for_sync(global_dir, project_dir, "scripts", "*.sh")
-  local tests = scan_directory_for_sync(global_dir, project_dir, "tests", "test_*.sh")
-  local rules = scan_directory_for_sync(global_dir, project_dir, "rules", "*.md")
-  local output = scan_directory_for_sync(global_dir, project_dir, "output", "*.md")
-  local systemd_service = scan_directory_for_sync(global_dir, project_dir, "systemd", "*.service")
-  local systemd_timer = scan_directory_for_sync(global_dir, project_dir, "systemd", "*.timer")
-  local systemd = {}
-  for _, file in ipairs(systemd_service) do
-    table.insert(systemd, file)
-  end
-  for _, file in ipairs(systemd_timer) do
-    table.insert(systemd, file)
-  end
-  local settings = scan_directory_for_sync(global_dir, project_dir, "", "settings.json")
+  -- Use the same scan function as the actual sync operation
+  local all_artifacts = sync_ops.scan_all_artifacts(global_dir, project_dir, config)
 
-  local cmd_copy, cmd_replace = count_actions(commands)
-  local hook_copy, hook_replace = count_actions(hooks)
-  local skill_copy, skill_replace = count_actions(skills)
-  local tmpl_copy, tmpl_replace = count_actions(templates)
-  local lib_copy, lib_replace = count_actions(lib_utils)
-  local doc_copy, doc_replace = count_actions(docs)
-  local script_copy, script_replace = count_actions(scripts)
-  local test_copy, test_replace = count_actions(tests)
-  local rule_copy, rule_replace = count_actions(rules)
-  local out_copy, out_replace = count_actions(output)
-  local sys_copy, sys_replace = count_actions(systemd)
-  local set_copy, set_replace = count_actions(settings)
+  -- Count actions for each category
+  local cmd_copy, cmd_replace = count_actions(all_artifacts.commands or {})
+  local hook_copy, hook_replace = count_actions(all_artifacts.hooks or {})
+  local skill_copy, skill_replace = count_actions(all_artifacts.skills or {})
+  local tmpl_copy, tmpl_replace = count_actions(all_artifacts.templates or {})
+  local lib_copy, lib_replace = count_actions(all_artifacts.lib or {})
+  local doc_copy, doc_replace = count_actions(all_artifacts.docs or {})
+  local script_copy, script_replace = count_actions(all_artifacts.scripts or {})
+  local test_copy, test_replace = count_actions(all_artifacts.tests or {})
+  local rule_copy, rule_replace = count_actions(all_artifacts.rules or {})
+  local sys_copy, sys_replace = count_actions(all_artifacts.systemd or {})
+  local set_copy, set_replace = count_actions(all_artifacts.settings or {})
+  local agent_copy, agent_replace = count_actions(all_artifacts.agents or {})
+  local ctx_copy, ctx_replace = count_actions(all_artifacts.context or {})
+  local root_copy, root_replace = count_actions(all_artifacts.root_files or {})
 
   local total_copy = cmd_copy + hook_copy + skill_copy + tmpl_copy + lib_copy +
                      doc_copy + script_copy + test_copy + rule_copy +
-                     out_copy + sys_copy + set_copy
+                     sys_copy + set_copy + agent_copy + ctx_copy + root_copy
   local total_replace = cmd_replace + hook_replace + skill_replace + tmpl_replace +
                         lib_replace + doc_replace + script_replace + test_replace +
-                        rule_replace + out_replace + sys_replace + set_replace
+                        rule_replace + sys_replace + set_replace + agent_replace +
+                        ctx_replace + root_replace
+
+  -- Load syncprotect to show protected files in preview
+  local sync_ops_mod = require("neotex.plugins.ai.claude.commands.picker.operations.sync")
+  local protected_paths = sync_ops_mod.load_syncprotect_for_preview(project_dir, base_dir)
 
   local lines = {
-    "Load All Artifacts",
+    "Load Core Agent System",
     "",
-    "This action will sync all artifacts from " .. global_dir .. "/.claude/ to your",
-    "local project's .claude/ directory.",
+    "This action will sync core system artifacts from " .. global_dir .. "/" .. base_dir .. "/ to your",
+    "local project's " .. base_dir .. "/ directory (extensions excluded).",
     "",
   }
+
+  -- Show protected files section if any exist
+  if next(protected_paths) then
+    table.insert(lines, "**Protected Files** (.syncprotect):")
+    local sorted_paths = {}
+    for path, _ in pairs(protected_paths) do
+      table.insert(sorted_paths, path)
+    end
+    table.sort(sorted_paths)
+    for _, path in ipairs(sorted_paths) do
+      table.insert(lines, "  - " .. path .. " (skipped during sync)")
+    end
+    table.insert(lines, "")
+  end
 
   if total_copy + total_replace > 0 then
     table.insert(lines, "**Operations by Type:**")
@@ -243,13 +228,16 @@ local function preview_load_all(self)
     table.insert(lines, string.format("  Scripts:    %d new, %d replace", script_copy, script_replace))
     table.insert(lines, string.format("  Tests:      %d new, %d replace", test_copy, test_replace))
     table.insert(lines, string.format("  Rules:      %d new, %d replace", rule_copy, rule_replace))
-    table.insert(lines, string.format("  Output:     %d new, %d replace", out_copy, out_replace))
+    table.insert(lines, string.format("  Agents:     %d new, %d replace", agent_copy, agent_replace))
+    table.insert(lines, string.format("  Context:    %d new, %d replace", ctx_copy, ctx_replace))
     table.insert(lines, string.format("  Systemd:    %d new, %d replace", sys_copy, sys_replace))
     table.insert(lines, string.format("  Settings:   %d new, %d replace", set_copy, set_replace))
+    table.insert(lines, string.format("  Root Files: %d new, %d replace", root_copy, root_replace))
     table.insert(lines, "")
     table.insert(lines, string.format("**Total:** %d new, %d replace", total_copy, total_replace))
     table.insert(lines, "")
-    table.insert(lines, "**Note:** Local-only artifacts will not be affected.")
+    table.insert(lines, "**Note:** Extension-owned artifacts are excluded.")
+    table.insert(lines, "          Local-only artifacts will not be affected.")
     table.insert(lines, "          Execute permissions preserved for .sh files.")
   else
     table.insert(lines, "**All artifacts already in sync!**")
@@ -258,7 +246,7 @@ local function preview_load_all(self)
   table.insert(lines, "")
   table.insert(lines, "**Current Status:**")
   table.insert(lines, string.format("  Project directory: %s", project_dir))
-  table.insert(lines, "  Global directory:  " .. global_dir .. "/.claude/")
+  table.insert(lines, "  Global directory:  " .. global_dir .. "/" .. base_dir .. "/")
   table.insert(lines, "")
   table.insert(lines, "Press Enter to proceed with confirmation, or Escape to cancel.")
 
@@ -307,29 +295,30 @@ end
 --- @param self table Telescope previewer state
 --- @param entry table Telescope entry
 local function preview_hook_event(self, entry)
-  local event_descriptions = {
-    Stop = "Triggered after command completion",
-    SessionStart = "When Claude Code session begins",
-    SessionEnd = "When Claude Code session ends",
-    SubagentStop = "After subagent completes",
-    Notification = "Permission or idle notification events",
-    PreToolUse = "Before tool execution",
-    PostToolUse = "After tool execution",
-    UserPromptSubmit = "When user prompt submitted",
-    PreCompact = "Before context compaction",
-  }
+  local registry = require("neotex.plugins.ai.claude.commands.picker.artifacts.registry")
 
+  local long_desc = "Unknown event"
+  if registry.HOOK_EVENT_DESCRIPTIONS and registry.HOOK_EVENT_DESCRIPTIONS[entry.value.name] then
+    long_desc = registry.HOOK_EVENT_DESCRIPTIONS[entry.value.name].long
+  end
+
+  local hooks = entry.value.hooks or {}
   local lines = {
     "# Hook Event: " .. entry.value.name,
     "",
-    "**Description**: " .. (event_descriptions[entry.value.name] or "Unknown event"),
+    "**Description**: " .. long_desc,
     "",
-    "**Registered Hooks**: " .. #entry.value.hooks .. " hook(s)",
+    "**Registered Hooks**: " .. #hooks .. " hook(s)",
     "",
     "Hooks:",
   }
-  for _, hook in ipairs(entry.value.hooks) do
-    table.insert(lines, "- " .. hook.name .. " (" .. hook.filepath .. ")")
+  for _, hook in ipairs(hooks) do
+    if hook.is_inline then
+      -- Display inline command snippet instead of filepath
+      table.insert(lines, "- " .. hook.name .. " [Inline command]: " .. (hook.command or ""))
+    else
+      table.insert(lines, "- " .. hook.name .. " (" .. (hook.filepath or "") .. ")")
+    end
   end
 
   vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, lines)
@@ -546,18 +535,221 @@ local function preview_command(self, entry)
   vim.api.nvim_buf_set_option(self.state.bufnr, "filetype", "markdown")
 end
 
+--- Create preview for extension entries
+--- @param self table Telescope previewer state
+--- @param entry table Telescope entry
+local function preview_extension(self, entry)
+  local ext = entry.value
+  local lang = (type(ext.language) == "string") and ext.language or "any"
+  local lines = {
+    "# " .. ext.name .. " v" .. (ext.version or "unknown"),
+    "",
+    "**Status**: " .. (ext.status or "unknown"),
+    "**Language**: " .. lang,
+    "",
+    "## Description",
+    ext.description or "No description",
+    "",
+  }
+
+  -- Try to get detailed info from extensions module
+  local ok, extensions = pcall(require, "neotex.plugins.ai.claude.extensions")
+  if ok then
+    local details = extensions.get_details(ext.name)
+
+    -- Provides section
+    if details and details.provides then
+      table.insert(lines, "## Provides")
+      for category, items in pairs(details.provides) do
+        if type(items) == "table" and #items > 0 then
+          table.insert(lines, "")
+          table.insert(lines, "### " .. category)
+          for _, item in ipairs(items) do
+            table.insert(lines, "- " .. item)
+          end
+        end
+      end
+    end
+
+    -- MCP Servers section
+    if details and details.mcp_servers then
+      table.insert(lines, "")
+      table.insert(lines, "## MCP Servers")
+      for name, config in pairs(details.mcp_servers) do
+        table.insert(lines, "- **" .. name .. "**: " .. config.command)
+      end
+    end
+
+    -- Installed files (if active)
+    if details and details.installed_files and #details.installed_files > 0 then
+      table.insert(lines, "")
+      table.insert(lines, "## Installed Files (" .. #details.installed_files .. ")")
+      for i, file in ipairs(details.installed_files) do
+        if i <= 10 then
+          table.insert(lines, "- " .. file)
+        end
+      end
+      if #details.installed_files > 10 then
+        table.insert(lines, "- ... and " .. (#details.installed_files - 10) .. " more")
+      end
+    end
+
+    -- Loaded at timestamp
+    if details and details.loaded_at then
+      table.insert(lines, "")
+      table.insert(lines, "**Loaded**: " .. details.loaded_at)
+    end
+  end
+
+  vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, lines)
+  vim.api.nvim_buf_set_option(self.state.bufnr, "filetype", "markdown")
+end
+
+--- Create preview for agent entries
+--- @param self table Telescope previewer state
+--- @param entry table Telescope entry
+local function preview_agent(self, entry)
+  local agent = entry.value
+  local lines = {
+    "# Agent: " .. agent.name,
+    "",
+  }
+
+  if agent.description and agent.description ~= "" then
+    table.insert(lines, "**Description**: " .. agent.description)
+    table.insert(lines, "")
+  end
+
+  table.insert(lines, "---")
+  table.insert(lines, "")
+  table.insert(lines, "**File**: " .. (agent.filepath or "Unknown"))
+  table.insert(lines, "**Status**: " .. (agent.is_local and "[Local]" or "[Global]"))
+  table.insert(lines, "")
+
+  -- Try to read first lines of agent file for additional context
+  local filepath = agent.filepath
+  if filepath and vim.fn.filereadable(filepath) == 1 then
+    table.insert(lines, "---")
+    table.insert(lines, "")
+    table.insert(lines, "## Agent Definition")
+    table.insert(lines, "")
+
+    local success, file = pcall(io.open, filepath, "r")
+    if success and file then
+      local line_count = 0
+      for line in file:lines() do
+        table.insert(lines, line)
+        line_count = line_count + 1
+        if line_count >= MAX_PREVIEW_LINES then
+          break
+        end
+      end
+      file:close()
+
+      local total_lines = #vim.fn.readfile(filepath)
+      if total_lines > MAX_PREVIEW_LINES then
+        table.insert(lines, "")
+        table.insert(lines, "...")
+        table.insert(lines, string.format(
+          "[Preview truncated - showing first %d of %d lines]",
+          MAX_PREVIEW_LINES, total_lines
+        ))
+      end
+    end
+  end
+
+  vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, lines)
+  vim.api.nvim_buf_set_option(self.state.bufnr, "filetype", "markdown")
+end
+
+--- Create preview for root_file entries
+--- @param self table Telescope previewer state
+--- @param entry table Telescope entry
+local function preview_root_file(self, entry)
+  local root_file = entry.value
+  local filepath = root_file.filepath
+
+  local lines = {
+    "# " .. root_file.name,
+    "",
+  }
+
+  if root_file.description and root_file.description ~= "" then
+    table.insert(lines, "**Description**: " .. root_file.description)
+    table.insert(lines, "")
+  end
+
+  table.insert(lines, "**Path**: " .. (filepath or "Unknown"))
+  table.insert(lines, "**Status**: " .. (root_file.is_local and "[Local]" or "[Global]"))
+  table.insert(lines, "")
+
+  -- Read and display file contents
+  if filepath and vim.fn.filereadable(filepath) == 1 then
+    table.insert(lines, "---")
+    table.insert(lines, "")
+
+    local success, file = pcall(io.open, filepath, "r")
+    if success and file then
+      local line_count = 0
+      for line in file:lines() do
+        table.insert(lines, line)
+        line_count = line_count + 1
+        if line_count >= MAX_PREVIEW_LINES then
+          break
+        end
+      end
+      file:close()
+
+      local total_lines = #vim.fn.readfile(filepath)
+      if total_lines > MAX_PREVIEW_LINES then
+        table.insert(lines, "")
+        table.insert(lines, "...")
+        table.insert(lines, string.format(
+          "[Preview truncated - showing first %d of %d lines]",
+          MAX_PREVIEW_LINES, total_lines
+        ))
+      end
+    else
+      table.insert(lines, "Failed to read file")
+    end
+  else
+    table.insert(lines, "---")
+    table.insert(lines, "")
+    table.insert(lines, "File not found or not readable")
+  end
+
+  -- Determine appropriate filetype for syntax highlighting
+  local ext = vim.fn.fnamemodify(filepath or "", ":e")
+  local filetype = "text"
+  if ext == "md" then
+    filetype = "markdown"
+  elseif ext == "json" then
+    filetype = "json"
+  elseif ext == "yaml" or ext == "yml" then
+    filetype = "yaml"
+  elseif ext == "lua" then
+    filetype = "lua"
+  end
+
+  vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, lines)
+  vim.api.nvim_buf_set_option(self.state.bufnr, "filetype", filetype)
+end
+
 --- Create custom previewer for command documentation
 --- @return table Telescope previewer
 function M.create_command_previewer()
   return previewers.new_buffer_previewer({
     title = "Command Details",
     define_preview = function(self, entry, status)
+      -- Extract config from entry value for config-aware preview functions
+      local entry_config = entry.value.config
+
       if entry.value.is_heading then
         preview_heading(self, entry)
       elseif entry.value.is_help then
-        preview_help(self)
+        preview_help(self, entry_config)
       elseif entry.value.is_load_all then
-        preview_load_all(self)
+        preview_load_all(self, entry_config)
       elseif entry.value.entry_type == "skill" then
         preview_skill(self, entry)
       elseif entry.value.entry_type == "hook_event" then
@@ -574,6 +766,12 @@ function M.create_command_previewer()
         preview_doc(self, entry)
       elseif entry.value.entry_type == "command" then
         preview_command(self, entry)
+      elseif entry.value.entry_type == "extension" then
+        preview_extension(self, entry)
+      elseif entry.value.entry_type == "agent" then
+        preview_agent(self, entry)
+      elseif entry.value.entry_type == "root_file" then
+        preview_root_file(self, entry)
       else
         vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, {"Unknown entry type"})
       end

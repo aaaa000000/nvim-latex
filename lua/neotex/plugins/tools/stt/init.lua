@@ -1,10 +1,11 @@
 -- Neovim STT (Speech-to-Text) Plugin
--- Uses Vosk for offline speech recognition
+-- Uses Vosk for offline speech recognition with context-aware Claude Code integration
 --
 -- Requirements:
 --   - parecord (pulseaudio-utils or pipewire-pulse)
 --   - vosk Python package with vosk-model-small-en-us
 --   - ~/.local/bin/vosk-transcribe.py (transcription helper)
+--   - Terminal with enhanced keyboard protocol (WezTerm, Kitty) for <C-'> support
 --
 -- Configuration (optional):
 --   vim.g.stt_model_path = "~/.local/share/vosk/vosk-model-small-en-us"
@@ -12,14 +13,16 @@
 --   vim.g.stt_sample_rate = 16000  -- audio sample rate
 --
 -- Usage:
---   <leader>vr - Start recording
---   <leader>vs - Stop recording and transcribe
---   <leader>vv - Toggle recording (start if not recording, stop if recording)
---   <C-\>      - Toggle recording (normal mode)
---   <C-'>      - Toggle recording (terminal mode, for Claude Code sidebar)
+--   <leader>vr - Start recording (which-key, if enabled)
+--   <leader>vs - Stop recording and transcribe (which-key, if enabled)
+--   <leader>vv - Toggle recording (which-key, if enabled)
+--   <C-'>      - Unified dictation key (normal, insert, terminal modes)
+--                In Claude Code buffers: toggles voice mode via /voice
+--                  (use Space for hold-to-talk once voice mode is enabled)
+--                In all other buffers: toggles Vosk STT recording/transcription
 --
--- Author: Claude Code Integration
--- License: MIT
+-- Global state:
+--   vim.g.stt_recording - true when recording, false otherwise (for statusline)
 
 local M = {}
 
@@ -39,18 +42,36 @@ local function get_config()
   }
 end
 
--- Helper: show message
 local function notify(msg, level)
   level = level or vim.log.levels.INFO
   vim.notify("[STT] " .. msg, level)
 end
 
--- Helper: check if command exists
 local function command_exists(cmd)
   return vim.fn.executable(cmd) == 1
 end
 
--- Start recording audio
+-- Claude Code integration
+local _session_manager_ok, _session_manager = pcall(require, "neotex.plugins.ai.claude.core.session-manager")
+
+local function _is_claude_code_buffer(bufnr)
+  if not _session_manager_ok then
+    return false
+  end
+  local ok, result = pcall(_session_manager.is_claude_buffer, bufnr)
+  if not ok then
+    return false
+  end
+  return result
+end
+
+local function _send_claude_voice(bufnr)
+  local channel = vim.b[bufnr].terminal_job_id
+  if not channel or channel <= 0 then return false end
+  vim.fn.chansend(channel, "/voice\r")
+  return true
+end
+
 function M.start_recording()
   if is_recording then
     notify("Already recording! Press <leader>vs to stop.", vim.log.levels.WARN)
@@ -59,17 +80,13 @@ function M.start_recording()
 
   local config = get_config()
 
-  -- Check for parecord
   if not command_exists("parecord") then
     notify("parecord not found. Install pulseaudio-utils or pipewire-pulse.", vim.log.levels.ERROR)
     return
   end
 
-  -- Clean up any existing recording file
   vim.fn.delete(config.recording_file)
 
-  -- Start recording with parecord
-  -- Uses mono channel at 16kHz for optimal Vosk performance
   local cmd = {
     "parecord",
     "--channels=1",
@@ -81,10 +98,10 @@ function M.start_recording()
   recording_job_id = vim.fn.jobstart(cmd, {
     on_exit = function(_, exit_code, _)
       is_recording = false
+      vim.g.stt_recording = false
       recording_job_id = nil
 
       if exit_code == 0 or exit_code == 143 then
-        -- 143 = SIGTERM (normal stop), 0 = natural exit
         M.transcribe_and_insert()
       else
         notify("Recording failed with exit code: " .. exit_code, vim.log.levels.ERROR)
@@ -92,7 +109,6 @@ function M.start_recording()
     end,
     on_stderr = function(_, data, _)
       if data and #data > 0 and data[1] ~= "" then
-        -- Only log non-empty stderr
         for _, line in ipairs(data) do
           if line ~= "" then
             notify("Recording stderr: " .. line, vim.log.levels.DEBUG)
@@ -104,9 +120,9 @@ function M.start_recording()
 
   if recording_job_id > 0 then
     is_recording = true
+    vim.g.stt_recording = true
     notify("[STT] Recording started", vim.log.levels.INFO)
 
-    -- Set up auto-stop timeout
     vim.defer_fn(function()
       if is_recording then
         notify("Recording timeout reached, auto-stopping", vim.log.levels.WARN)
@@ -118,20 +134,17 @@ function M.start_recording()
   end
 end
 
--- Stop recording
 function M.stop_recording()
   if not is_recording or not recording_job_id then
     notify("Not currently recording", vim.log.levels.WARN)
     return
   end
 
-  -- Send SIGTERM to parecord to stop gracefully
   vim.fn.jobstop(recording_job_id)
-  -- Note: on_exit callback will handle transcription
+  vim.g.stt_recording = false
   notify("[STT] Stopped recording", vim.log.levels.INFO)
 end
 
--- Toggle recording state
 function M.toggle_recording()
   if is_recording then
     M.stop_recording()
@@ -140,35 +153,27 @@ function M.toggle_recording()
   end
 end
 
--- Transcribe recording and insert at cursor
 function M.transcribe_and_insert()
   local config = get_config()
 
-  -- Check if recording file exists
   if vim.fn.filereadable(config.recording_file) ~= 1 then
     notify("Recording file not found: " .. config.recording_file, vim.log.levels.ERROR)
     return
   end
 
-  -- Check for transcription script
   if vim.fn.filereadable(config.transcribe_script) ~= 1 then
     notify("Transcription script not found: " .. config.transcribe_script, vim.log.levels.ERROR)
     return
   end
 
-  -- Check for Python
   if not command_exists("python3") then
     notify("python3 not found", vim.log.levels.ERROR)
     return
   end
 
-  -- notify("Transcribing...", vim.log.levels.INFO)  -- Removed for cleaner UX
-
-  -- Save current position for insertion
   local cursor_pos = vim.api.nvim_win_get_cursor(0)
   local current_buf = vim.api.nvim_get_current_buf()
 
-  -- Run transcription asynchronously
   local cmd = {
     "python3",
     config.transcribe_script,
@@ -211,48 +216,48 @@ function M.transcribe_and_insert()
         return
       end
 
-      -- Insert text at the saved cursor position
       vim.schedule(function()
-        -- Make sure we're still in the same buffer
         if vim.api.nvim_get_current_buf() == current_buf then
-          -- Insert after cursor position
-          vim.api.nvim_win_set_cursor(0, cursor_pos)
-          vim.api.nvim_put({text}, 'c', true, true)
-          -- notify("Inserted: " .. string.sub(text, 1, 50) .. (string.len(text) > 50 and "..." or ""), vim.log.levels.INFO)  -- Removed for cleaner UX
+          local buftype = vim.api.nvim_get_option_value('buftype', { buf = current_buf })
+          if buftype == 'terminal' then
+            local channel = vim.b[current_buf].terminal_job_id
+            if channel and channel > 0 then
+              vim.fn.chansend(channel, text)
+            else
+              vim.fn.setreg('"', text)
+              notify("Terminal channel unavailable, text saved to register", vim.log.levels.WARN)
+            end
+          else
+            vim.api.nvim_win_set_cursor(0, cursor_pos)
+            vim.api.nvim_put({text}, 'c', true, true)
+          end
         else
-          -- Different buffer, use unnamed register
           vim.fn.setreg('"', text)
           notify("Text saved to register: " .. string.sub(text, 1, 50) .. (string.len(text) > 50 and "..." or ""), vim.log.levels.INFO)
         end
       end)
 
-      -- Clean up recording file
       vim.fn.delete(config.recording_file)
     end,
   })
 end
 
--- Check dependencies and report status
 function M.health()
   local config = get_config()
   local issues = {}
 
-  -- Check parecord
   if not command_exists("parecord") then
     table.insert(issues, "parecord not found - install pulseaudio-utils or pipewire-pulse")
   end
 
-  -- Check python3
   if not command_exists("python3") then
     table.insert(issues, "python3 not found")
   end
 
-  -- Check transcription script
   if vim.fn.filereadable(config.transcribe_script) ~= 1 then
     table.insert(issues, "Transcription script not found at " .. config.transcribe_script)
   end
 
-  -- Check model directory
   if vim.fn.isdirectory(config.model_path) ~= 1 then
     table.insert(issues, "Vosk model not found at " .. config.model_path)
   end
@@ -268,11 +273,9 @@ function M.health()
   end
 end
 
--- Setup keymappings
 function M.setup(opts)
   opts = opts or {}
 
-  -- Apply user configuration
   if opts.model_path then
     vim.g.stt_model_path = opts.model_path
   end
@@ -286,11 +289,7 @@ function M.setup(opts)
     vim.g.stt_sample_rate = opts.sample_rate
   end
 
-  -- Note: Keymaps are now configured in which-key.lua for centralized management
-  -- The plugin itself no longer sets keymaps to avoid duplicates
   if opts.keymaps ~= false then
-    -- Only set keymaps if explicitly requested via opts.keymaps = true
-    -- This allows manual setup for users who don't use which-key
     if opts.keymaps == true then
       local keymap_opts = { noremap = true, silent = true }
       vim.keymap.set('n', '<leader>vr', M.start_recording, vim.tbl_extend("force", keymap_opts, { desc = "STT: Start recording" }))
@@ -300,34 +299,60 @@ function M.setup(opts)
     end
   end
 
-  -- Create user commands
   vim.api.nvim_create_user_command('STTStart', M.start_recording, { desc = 'Start STT recording' })
   vim.api.nvim_create_user_command('STTStop', M.stop_recording, { desc = 'Stop STT recording' })
   vim.api.nvim_create_user_command('STTToggle', M.toggle_recording, { desc = 'Toggle STT recording' })
   vim.api.nvim_create_user_command('STTHealth', M.health, { desc = 'Check STT dependencies' })
 
-  -- Global Ctrl-\ toggle mapping (works in Claude Code and regular Neovim)
-  -- This is always set, independent of which-key availability
-  vim.keymap.set('n', '<C-\\>', M.toggle_recording, {
-    noremap = true,
-    silent = true,
-    desc = 'STT: Toggle recording (Ctrl-\\)'
-  })
+  vim.api.nvim_create_user_command('STTClaudeVoice', function()
+    local bufnr = vim.api.nvim_get_current_buf()
+    if not _is_claude_code_buffer(bufnr) then
+      notify("Not a Claude Code buffer", vim.log.levels.WARN)
+      return
+    end
+    _send_claude_voice(bufnr)
+  end, { desc = 'STT: Toggle Claude Code voice mode' })
 
-  -- Terminal-mode mapping for Ctrl-' (required for Claude Code sidebar)
-  -- Note: <C-\> is reserved by Neovim in terminal mode, so we use <C-'> instead
-  vim.keymap.set('t', "<C-'>", function()
-    -- Exit terminal mode temporarily to allow STT to function
-    vim.cmd('stopinsert')
-    M.toggle_recording()
-    -- Return to terminal mode after toggle completes
-    vim.schedule(function()
-      vim.cmd('startinsert')
-    end)
+  -- <C-'> context-aware dictation
+  -- Claude Code buffers: toggle voice mode (use Space for PTT)
+  -- All other buffers: Vosk STT toggle
+
+  vim.keymap.set('n', "<C-'>", function()
+    local bufnr = vim.api.nvim_get_current_buf()
+    if _is_claude_code_buffer(bufnr) then
+      _send_claude_voice(bufnr)
+    else
+      M.toggle_recording()
+    end
   end, {
     noremap = true,
     silent = true,
-    desc = "STT: Toggle recording (terminal mode, Ctrl-')"
+    desc = "STT: Toggle dictation (Ctrl-')"
+  })
+
+  vim.keymap.set('i', "<C-'>", function()
+    M.toggle_recording()
+  end, {
+    noremap = true,
+    silent = true,
+    desc = "STT: Toggle dictation (insert mode, Ctrl-')"
+  })
+
+  vim.keymap.set('t', "<C-'>", function()
+    local bufnr = vim.api.nvim_get_current_buf()
+    if _is_claude_code_buffer(bufnr) then
+      _send_claude_voice(bufnr)
+    else
+      vim.cmd('stopinsert')
+      M.toggle_recording()
+      vim.schedule(function()
+        vim.cmd('startinsert')
+      end)
+    end
+  end, {
+    noremap = true,
+    silent = true,
+    desc = "STT: Toggle dictation (terminal mode, Ctrl-')"
   })
 
 end

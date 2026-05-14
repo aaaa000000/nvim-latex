@@ -1,0 +1,16 @@
+{
+  "agent": {
+    "latex-implementation": {
+      "description": "Implement LaTeX documents following implementation plans",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/latex-implementation-agent.md}",
+      "tools": {"write":true,"edit":true,"bash":true,"read":true,"glob":true,"grep":true}
+    },
+    "latex-research": {
+      "description": "Research LaTeX documentation tasks using domain context and codebase exploration",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/latex-research-agent.md}",
+      "tools": {"read":true,"write":true,"edit":true,"glob":true,"grep":true,"bash":true,"webfetch":true,"websearch":true}
+    }
+  }
+}

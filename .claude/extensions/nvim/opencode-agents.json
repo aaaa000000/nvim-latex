@@ -1,0 +1,32 @@
+{
+  "agent": {
+    "neovim-research": {
+      "description": "Research Neovim configuration and plugin tasks",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/neovim-research-agent.md}",
+      "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "glob": true,
+        "grep": true,
+        "bash": true,
+        "webfetch": true,
+        "websearch": true
+      }
+    },
+    "neovim-implementation": {
+      "description": "Implement Neovim configuration and plugins",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/neovim-implementation-agent.md}",
+      "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "glob": true,
+        "grep": true,
+        "bash": true
+      }
+    }
+  }
+}

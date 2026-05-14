@@ -1,0 +1,13 @@
+{
+  "phase": 1,
+  "phase_name": "Update Primary Pattern Documents",
+  "started_at": "2026-05-05T12:00:00Z",
+  "last_updated": "2026-05-05T12:00:00Z",
+  "objectives": [
+    {"id": 1, "description": "Update subagent-continuation-loop.md handoff_path example", "status": "in_progress"},
+    {"id": 2, "description": "Update context-exhaustion-detection.md handoff_path and path examples", "status": "not_started"}
+  ],
+  "current_objective": 1,
+  "approaches_tried": [],
+  "handoff_count": 0
+}

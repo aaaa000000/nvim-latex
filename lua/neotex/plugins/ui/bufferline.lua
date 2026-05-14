@@ -77,8 +77,8 @@ local function smart_bufdelete(bufnr)
   -- Switch to next buffer FIRST (prevents Neovim from selecting Claude)
   vim.api.nvim_win_set_buf(current_win, next_buf)
 
-  -- Now delete the original buffer
-  vim.api.nvim_buf_delete(bufnr, { force = true })
+  -- Use bdelete (not force wipe) to preserve jump list entries
+  pcall(vim.cmd, "bdelete " .. bufnr)
 end
 
 -- Make it globally available for bufferline

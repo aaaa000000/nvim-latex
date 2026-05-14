@@ -291,10 +291,21 @@ function M.cleanup_state_file()
   local file = io.open(state_file, "r")
   if file then
     file:close()
-    -- Backup the corrupted file
     local backup_file = state_file .. ".backup." .. os.time()
     vim.fn.rename(state_file, backup_file)
     log_debug("Backed up corrupted state file to: %s", backup_file)
+    -- Cap backup files to 5 to prevent proliferation
+    local handle = io.popen('ls -t "' .. state_dir .. '"/last_session.json.backup.*')
+    if handle then
+      local backups = {}
+      for line in handle:lines() do
+        table.insert(backups, line)
+      end
+      handle:close()
+      for i = 6, #backups do
+        vim.fn.delete(backups[i])
+      end
+    end
   end
 end
 

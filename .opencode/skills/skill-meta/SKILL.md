@@ -1,14 +1,8 @@
 ---
 name: skill-meta
 description: Interactive system builder. Invoke for /meta command to create tasks for .opencode/ system changes.
-allowed-tools: Task, Bash, Edit, Read, Write, Read(/tmp/*.json), Bash(rm:*)
-# Original context (now loaded by subagent):
-#   - .opencode/docs/guides/component-selection.md
-#   - .opencode/docs/guides/creating-commands.md
-#   - .opencode/docs/guides/creating-skills.md
-#   - .opencode/docs/guides/creating-agents.md
-# Original tools (now used by subagent):
-#   - Read, Write, Edit, Glob, Grep, Bash(git, jq, mkdir), AskUserQuestion
+allowed-tools: Task, Bash, Edit, Read, Write
+agent: meta-builder-agent
 ---
 
 # Meta Skill
@@ -22,9 +16,9 @@ This eliminates the "continue" prompt issue between skill return and orchestrato
 ## Context References
 
 Reference (do not load eagerly):
-- Path: `.opencode/context/core/formats/return-metadata-file.md` - Metadata file schema
-- Path: `.opencode/context/core/patterns/postflight-control.md` - Marker file protocol
-- Path: `.opencode/context/core/patterns/file-metadata-exchange.md` - File I/O helpers
+- Path: `.opencode/context/formats/return-metadata-file.md` - Metadata file schema
+- Path: `.opencode/context/patterns/postflight-control.md` - Marker file protocol
+- Path: `.opencode/context/patterns/file-metadata-exchange.md` - File I/O helpers
 
 Note: This skill is a thin wrapper with internal postflight. Context is loaded by the delegated agent.
 
@@ -34,6 +28,16 @@ This skill activates when:
 - /meta command is invoked (with any arguments)
 - User requests system building or task creation for .opencode/ changes
 - System analysis is requested (--analyze flag)
+
+---
+
+## Anti-Bypass Constraint
+
+**PROHIBITION**: This skill and its delegated agent (meta-builder-agent) MUST NOT write to `.opencode/` paths using Write or Edit tools. The /meta workflow creates TASKS only. All `.opencode/` file modifications happen through the /implement lifecycle with proper skill delegation.
+
+**Detected by**: PostToolUse hook `validate-meta-write.sh` provides corrective context if bypass is attempted.
+
+**Legitimate writes**: Only `specs/` paths (TODO.md, state.json, task directories) are valid write targets for this skill chain.
 
 ---
 
@@ -92,7 +96,7 @@ Parameters:
 ```
 
 **DO NOT** use `Skill(meta-builder-agent)` - this will FAIL.
-Agents live in `.opencode/agents/`, not `.opencode/skills/`.
+Agents live in `.opencode/agent/subagents/`, not `.opencode/skills/`.
 The Skill tool can only invoke skills from `.opencode/skills/`.
 
 The subagent will:
@@ -106,7 +110,7 @@ The subagent will:
 
 ### 4. Return Validation
 
-Validate return matches `subagent-return.md` schema:
+Validate return matches `return-metadata-file.md` schema:
 - Status is one of: completed, partial, failed, blocked
 - Summary is non-empty and <100 tokens
 - Artifacts array present (task directories for interactive/prompt modes)
@@ -120,14 +124,14 @@ Return validated result to caller without modification.
 
 ## Return Format
 
-See `.opencode/context/core/formats/subagent-return.md` for full specification.
+See `.opencode/context/formats/return-metadata-file.md` for full specification.
 
 ### Expected Return: Interactive Mode (tasks created)
 
 ```json
 {
   "status": "tasks_created",
-  "summary": "Created 3 tasks for command creation workflow: research, implementation, and testing phases.",
+  "summary": "Created 2 tasks for command creation workflow. Tasks start in NOT STARTED status.",
   "artifacts": [
     {
       "type": "task",
@@ -146,11 +150,14 @@ See `.opencode/context/core/formats/subagent-return.md` for full specification.
     "delegation_depth": 1,
     "delegation_path": ["orchestrator", "meta", "meta-builder-agent"],
     "mode": "interactive",
-    "tasks_created": 2
+    "tasks_created": 2,
+    "tasks_status": "not_started"
   },
   "next_steps": "Run /research 430 to begin research on first task"
 }
 ```
+
+**Note**: Tasks created via `/meta` start in NOT STARTED status. Run `/research N` to begin the standard research -> plan -> implement lifecycle.
 
 ### Expected Return: Analyze Mode (read-only)
 
@@ -210,3 +217,21 @@ Return completed status (not failed) when user explicitly cancels at confirmatio
 
 ### Timeout
 Return partial status if subagent times out (default 7200s for interactive sessions).
+
+---
+
+## MUST NOT (Postflight Boundary)
+
+After the agent returns, this skill MUST NOT:
+
+1. **Edit .opencode/ files** - All system building is done by agent
+2. **Create task directories** - Task creation is done by agent
+3. **Run analysis commands** - Analysis is agent work
+4. **Write documentation** - Artifact creation is agent work
+5. **Use AskUserQuestion** - User interaction is agent work
+
+The postflight phase is LIMITED TO:
+- Reading agent return
+- Git commit (if tasks were created)
+
+Reference: @.opencode/context/standards/postflight-tool-restrictions.md

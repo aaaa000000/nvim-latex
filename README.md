@@ -2,6 +2,8 @@
 
 A feature-rich Neovim configuration with AI integration optimized for LaTeX, Markdown, Jupyter Notebooks, and managing NixOS.
 
+> **Looking for a user-friendly alternative?** See the [Zed Configuration](https://github.com/benbrastmckie/zed) for a more approachable editor setup that requires less initial investment than NeoVim.
+
 This setup provides a streamlined environment for academic writing, code development, and system management.
 The AI integration makes it easy to learn and configure this setup for your specific needs.
 Every subdirectory includes a `README.md` file which documents the modules contained in that directory.
@@ -48,8 +50,8 @@ This Neovim configuration includes specialized support for:
 - **LaTeX Editing**: Comprehensive LaTeX support through VimTeX with custom templates, PDF viewing, citation management, LaTeX-specific text surrounds, and more
 - **Markdown Writing**: Enhanced Markdown editing with smart list handling, checkboxes, markdown-specific text surrounds, and live preview
 - **AI Assistance**: Multiple AI integration options for code completion and development workflows:
-  - [Claude Code](lua/neotex/plugins/ai/claude/README.md) - Official Claude integration with session management and worktree support
-  - [Avante](lua/neotex/plugins/ai/avante/README.md) - AI assistant with MCP-Hub tools integration
+  - [Claude Code](lua/neotex/plugins/ai/claude/README.md) - Primary AI integration with session management and worktree support
+  - [OpenCode](lua/neotex/plugins/ai/README.md#opencode) - Alternative AI TUI with context placeholders
   - [Lectic](lua/neotex/plugins/ai/README.md#lectic) - AI-assisted writing for markdown files
 - **Jupyter Notebooks**: Interactive notebook support with cell execution, navigation, and conversion between formats
 - **NixOS Management**: Convenient commands for managing NixOS configurations, packages, and updates
@@ -119,7 +121,7 @@ Detailed READMEs in every directory documenting modules and functionality:
 - **[NeoTeX Namespace](lua/neotex/README.md)** - Configuration overview and bootstrap process
 - **[Configuration Core](lua/neotex/config/README.md)** - Essential Neovim settings (options, keymaps, autocommands)
 - **[Plugin System](lua/neotex/plugins/README.md)** - Plugin organization and management
-  - [AI Integration](lua/neotex/plugins/ai/README.md) - Avante, Claude Code, and MCP Hub
+  - [AI Integration](lua/neotex/plugins/ai/README.md) - Claude Code, OpenCode, Lectic, and MCP Hub
   - [Editor Enhancements](lua/neotex/plugins/editor/README.md) - Navigation, formatting, and terminal integration
   - [LSP Configuration](lua/neotex/plugins/lsp/README.md) - Language server setup and completion
   - [Text Processing](lua/neotex/plugins/text/README.md) - LaTeX, Markdown, Jupyter, and Lean support
@@ -176,101 +178,49 @@ See [`scripts/README.md`](scripts/README.md) for detailed script documentation a
    - Plugin configurations: `lua/neotex/plugins/`
    - Filetype-specific settings: `after/ftplugin/`
 
-## Using Avante AI
+## AI Integration
 
-Avante provides AI-powered code assistance directly within Neovim, offering intelligent code completion, explanations, refactoring suggestions, and conversational help. It supports multiple AI providers including Claude (Anthropic), GPT (OpenAI), and Gemini (Google).
+This configuration integrates multiple AI tools for code assistance, development workflows, and writing. Claude Code serves as the primary AI interface, with OpenCode as an alternative TUI and Lectic for AI-assisted writing.
 
-### Basic Usage
+For details on the agent system architecture that powers automated task management, see [.claude/README.md](.claude/README.md).
+
+### Claude Code (Primary)
+
+Claude Code provides AI-powered development assistance directly within Neovim through a terminal sidebar with session management and git worktree support.
 
 > [Info] The `leader` key is set to `space`.
 
-- **Access the AI**: Press `<leader>aa` to ask a question or `<leader>at` to toggle project-specific TTS notifications
-- **Edit with AI**: Select text in visual mode and press `<leader>ae` to edit with AI assistance
-- **Claude Code**: Use `<C-c>` to toggle Claude Code sidebar (works in any mode)
+| Key | Action |
+|-----|--------|
+| `<C-CR>` | Toggle Claude Code (all modes) |
+| `<leader>ac` | Claude commands (normal) / send selection to Claude (visual) |
+| `<leader>as` | Claude sessions |
+| `<leader>ay` | Toggle yolo mode (skip permission prompts) |
+| `<leader>am` | Select Claude model |
 
-### Managing AI Settings
+Claude Code is particularly useful for understanding and modifying this Neovim configuration. You can ask it to explain features, help with keybindings, customize settings, troubleshoot issues, or generate configuration snippets.
 
-- **Switch Models**: Press `<leader>am` to select a model for the current provider
-- **Change Provider**: Press `<leader>ap` to select AI provider (Claude, OpenAI, Gemini)
-- **Resume Sessions**: Use `<leader>ar` to open Claude session picker
+### OpenCode (Alternative TUI)
 
-More details are provided in [Making Configuration Changes](#making-configuration-changes) below.
+OpenCode provides an alternative AI interface with context placeholders for buffer contents, diagnostics, and more.
 
-### Using Avante to Work with this Configuration
+| Key | Action |
+|-----|--------|
+| `<C-g>` | Toggle OpenCode (normal/insert) |
+| `<leader>ao` | OpenCode commands |
+| `<leader>ab` | OpenCode with buffer context |
+| `<leader>ad` | OpenCode with diagnostics context |
+| `<leader>ah` | OpenCode session history |
 
-Avante is particularly useful for understanding and modifying this Neovim configuration:
+### Using AI for Configuration Help
 
-1. **Explore Features**: Ask Avante about specific features, e.g., "How do I use VimTeX in this configuration?"
+When modifying this Neovim configuration, the AI tools can help ensure consistency and prevent conflicts.
+
+1. **Explore Features**: Ask about specific features, e.g., "How do I use VimTeX in this configuration?"
 2. **Get Help with Keymappings**: Ask "What are the keybindings for this [feature]?"
 3. **Customize Settings**: Ask "How can I change [setting]?" or "Help me add a new keybinding for [action]"
 4. **Troubleshoot Issues**: Describe any problems you encounter for guided troubleshooting
-5. **Add New Features**: Get assistance with integrating new plugins or features and understanding documentation
-
-Example prompts:
-- "I want to add a new LaTeX template. How should I do that?"
-- "Help me understand the Markdown list handling in this setup"
-- "Show me how to create a custom system prompt for Avante"
-
-### Special Keybindings in Avante Buffers
-
-When in an Avante buffer (AI interface):
-
-| Key       | Action                            |
-|-----------|-----------------------------------|
-| `q`       | Quit Avante                       |
-| `<C-t>`   | Toggle Avante interface           |
-| `<C-c>`   | Reset/clear Avante content        |
-| `<C-m>`   | Select model for current provider |
-| `<C-p>`   | Select provider and model         |
-| `<C-s>`   | Stop AI generation                |
-| `<C-d>`   | Select provider/model with default|
-| `<CR>`    | Create new line (not submission)  |
-| `<C-j>`   | Move up between panes             |
-| `<C-k>`   | Move down between panes           |
-| `<C-l>`   | Accept suggestion (insert mode)   |
-| `<C-h>`   | Dismiss suggestion                |
-| `o`       | Select 'ours' in diff             |
-| `t`       | Select 'theirs' in diff           |
-| `a`       | Select all 'theirs' in diff       |
-| `b`       | Select both in diff               |
-| `c`       | Select at cursor in diff          |
-| `n`       | Jump to next                      |
-| `N`       | Jump to previous                  |
-| `A`       | Apply all in sidebar              |
-| `a`       | Apply at cursor in sidebar        |
-| `<Tab>`   | Switch windows in sidebar         |
-| `<S-Tab>` | Reverse switch windows in sidebar |
-
-
-### Using Avante for Configuration Help
-
-Avante AI can be an invaluable tool when modifying this configuration.
-When modifying this Neovim configuration, follow these guidelines to ensure consistency and prevent conflicts.
-
-1. **Ask for Documentation**: Use Avante to generate detailed docstrings by asking:
-   ```
-   Help me create a comprehensive docstring for this function: [paste function]
-   ```
-
-2. **Understand Existing Code**: Ask Avante to explain complex parts of the configuration:
-   ```
-   Explain how this (LaTeX) code works: [paste code]
-   ```
-
-3. **Find Keybinding Conflicts**: Ask Avante to help identify conflicts:
-   ```
-   Check if these keybindings might conflict with existing ones: [list keys]
-   ```
-
-4. **Generate Configuration Snippets**: Get help creating new configuration:
-   ```
-   Help me create a configuration for [plugin/feature] that works with my existing setup/needs
-   ```
-
-5. **Troubleshoot Issues**: When something isn't working, ask Avante:
-   ```
-   I'm having an issue with [feature]. Here's the relevant configuration and error...
-   ```
+5. **Generate Configuration**: Get help creating new plugin configurations or keybinding setups
 
 ## Keybinding Reference
 
@@ -304,7 +254,7 @@ Provides the which-key system for:
 - **Leader key**: `<space>` - Access to all major functionality through organized menus
 - **Help system**: Press `<leader>` and wait to see available commands
 - **Complete reference**: See [docs/MAPPINGS.md](docs/MAPPINGS.md) for full details
-- **Avante AI integration**: Ask Avante about specific keybindings with `<leader>ai`
+- **Claude Code integration**: Toggle Claude Code with `<C-CR>` or run commands with `<leader>ac`
 
 ## Further Features
 

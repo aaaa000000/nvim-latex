@@ -14,14 +14,14 @@ this skill handles all postflight operations (status update, artifact linking, g
 ## Context References
 
 Reference (do not load eagerly):
-- Path: `.claude/context/core/formats/return-metadata-file.md` - Metadata file schema
-- Path: `.claude/context/core/patterns/postflight-control.md` - Marker file protocol
-- Path: `.claude/context/core/patterns/jq-escaping-workarounds.md` - jq escaping patterns
+- Path: `.claude/context/formats/return-metadata-file.md` - Metadata file schema
+- Path: `.claude/context/patterns/postflight-control.md` - Marker file protocol
+- Path: `.claude/context/patterns/jq-escaping-workarounds.md` - jq escaping patterns
 
 ## Trigger Conditions
 
 This skill activates when:
-- Task language is "neovim"
+- Task type is "neovim"
 - Research is needed for Neovim configuration
 - Plugin documentation or patterns need to be gathered
 
@@ -47,7 +47,7 @@ if [ -z "$task_data" ]; then
 fi
 
 # Extract fields
-language=$(echo "$task_data" | jq -r '.language // "neovim"')
+task_type=$(echo "$task_data" | jq -r '.task_type // "neovim"')
 status=$(echo "$task_data" | jq -r '.status')
 project_name=$(echo "$task_data" | jq -r '.project_name')
 description=$(echo "$task_data" | jq -r '.description // ""')
@@ -59,19 +59,9 @@ description=$(echo "$task_data" | jq -r '.description // ""')
 
 Update task status to "researching" BEFORE invoking subagent.
 
-**Update state.json**:
 ```bash
-jq --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-   --arg status "researching" \
-   --arg sid "$session_id" \
-  '(.active_projects[] | select(.project_number == '$task_number')) |= . + {
-    status: $status,
-    last_updated: $ts,
-    session_id: $sid
-  }' specs/state.json > /tmp/state.json && mv /tmp/state.json specs/state.json
+bash .claude/scripts/update-task-status.sh preflight "$task_number" research "$session_id"
 ```
-
-**Update TODO.md**: Use Edit tool to change status marker to `[RESEARCHING]`.
 
 ---
 
@@ -107,7 +97,7 @@ EOF
     "task_number": N,
     "task_name": "{project_name}",
     "description": "{description}",
-    "language": "neovim"
+    "task_type": "neovim"
   },
   "focus_prompt": "{optional focus}",
   "metadata_file_path": "specs/{NNN}_{SLUG}/.return-meta.json"
@@ -138,7 +128,25 @@ The subagent will:
 
 ---
 
+### Stage 5b: Self-Execution Fallback
+
+**CRITICAL**: If you performed the work above WITHOUT using the Task tool (i.e., you read files,
+wrote artifacts, or updated metadata directly instead of spawning a subagent), you MUST write a
+`.return-meta.json` file now before proceeding to postflight. Use the schema from
+`return-metadata-file.md` with the appropriate status value for this operation.
+
+If you DID use the Task tool, skip this stage -- the subagent already wrote the metadata.
+
+---
+
+## Postflight (ALWAYS EXECUTE)
+
+The following stages MUST execute after work is complete, whether the work was done by a
+subagent or inline (Stage 5b). Do NOT skip these stages for any reason.
+
 ### Stage 6: Parse Subagent Return
+
+Read the metadata file:
 
 ```bash
 metadata_file="specs/${padded_num}_${project_name}/.return-meta.json"
@@ -159,11 +167,17 @@ fi
 
 If status is "researched", update state.json and TODO.md.
 
+```bash
+bash .claude/scripts/update-task-status.sh postflight "$task_number" research "$session_id"
+```
+
 ---
 
 ### Stage 8: Link Artifacts
 
 Add artifact to state.json with summary.
+
+**Update TODO.md**: Link artifact using count-aware format. Apply the four-case Edit logic from `@.claude/context/patterns/artifact-linking-todo.md` with `field_name=**Research**`, `next_field=**Plan**`.
 
 ---
 
@@ -174,8 +188,6 @@ git add -A
 git commit -m "task ${task_number}: complete research
 
 Session: ${session_id}
-
-Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ```
 
 ---
@@ -195,7 +207,7 @@ rm -f "specs/${padded_num}_${project_name}/.return-meta.json"
 Research completed for task {N}:
 - Found plugin configuration patterns
 - Identified lazy loading strategy
-- Created report at specs/{NNN}_{SLUG}/reports/research-{NNN}.md
+- Created report at specs/{NNN}_{SLUG}/reports/MM_{short-slug}.md
 - Status updated to [RESEARCHED]
 - Changes committed
 ```

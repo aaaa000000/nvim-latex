@@ -1,0 +1,99 @@
+{
+  "entries": [
+    {
+      "path": "project/filetypes/tools/tool-detection.md",
+    "description": "Shared tool detection patterns for all filetypes agents",
+    "line_count": 180,
+    "load_when": {
+      "agents": [
+        "filetypes-router-agent",
+        "document-agent",
+        "spreadsheet-agent",
+        "presentation-agent",
+        "sheet-agent"
+      ],
+      "languages": [],
+      "commands": ["/convert", "/table", "/slides", "/sheet"]
+    }
+  },
+  {
+    "path": "project/filetypes/tools/dependency-guide.md",
+    "description": "Platform-specific installation instructions for conversion tools",
+    "line_count": 120,
+    "load_when": {
+      "agents": [
+        "filetypes-router-agent",
+        "document-agent",
+        "spreadsheet-agent",
+        "presentation-agent",
+        "sheet-agent"
+      ],
+      "languages": [],
+      "commands": ["/convert", "/table", "/slides", "/sheet"]
+    }
+  },
+  {
+    "path": "project/filetypes/tools/mcp-integration.md",
+    "description": "MCP server integration patterns for format conversion",
+    "line_count": 80,
+    "load_when": {
+      "agents": [
+        "filetypes-router-agent",
+        "document-agent"
+      ],
+      "languages": [],
+      "commands": ["/convert"]
+    }
+  },
+  {
+    "path": "project/filetypes/patterns/spreadsheet-tables.md",
+    "description": "Spreadsheet to LaTeX/Typst table conversion patterns",
+    "line_count": 150,
+    "load_when": {
+      "agents": ["spreadsheet-agent"],
+      "languages": [],
+      "commands": ["/table"]
+    }
+  },
+  {
+    "path": "project/filetypes/patterns/presentation-slides.md",
+    "description": "Presentation extraction and slide generation patterns",
+    "line_count": 180,
+    "load_when": {
+      "agents": ["presentation-agent"],
+      "languages": [],
+      "commands": ["/slides"]
+    }
+  },
+  {
+    "path": "project/filetypes/README.md",
+    "description": "Filetypes extension overview and navigation",
+    "line_count": 60,
+    "load_when": {
+      "agents": [],
+      "languages": [],
+      "commands": []
+    }
+  },
+  {
+    "path": "project/filetypes/patterns/pitch-deck-structure.md",
+    "description": "YC pitch deck structure, slide content guidelines, and design principles",
+    "line_count": 253,
+    "load_when": {
+      "agents": ["deck-agent"],
+      "languages": [],
+      "commands": ["/deck"]
+    }
+  },
+  {
+    "path": "project/filetypes/patterns/touying-pitch-deck-template.md",
+    "description": "Touying 0.6.3 template for investor pitch decks with customization patterns",
+    "line_count": 396,
+    "load_when": {
+      "agents": ["deck-agent"],
+      "languages": [],
+      "commands": ["/deck"]
+    }
+  }
+  ]
+}

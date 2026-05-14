@@ -16,6 +16,7 @@ The configuration provides:
 ----------------------------------------------------------------------------------
 TOP-LEVEL MAPPINGS (<leader>)                   | DESCRIPTION
 ----------------------------------------------------------------------------------
+<leader>b - Close other buffers                 | Close all buffers except current
 <leader>c - Create vertical split               | Split window vertically
 <leader>d - Save and delete buffer              | Save file and close buffer
 <leader>e - Toggle NvimTree explorer            | Open/close file explorer
@@ -101,24 +102,24 @@ return {
       local dev_cli_path = nil
 
       -- Check current directory
-      if vim.fn.filereadable(current_dir .. "/Code/dev_cli.py") == 1 then
-        dev_cli_path = current_dir .. "/Code/dev_cli.py"
+      if vim.fn.filereadable(current_dir .. "/code/dev_cli.py") == 1 then
+        dev_cli_path = current_dir .. "/code/dev_cli.py"
       -- Check if we're in a worktree and look in parent
       elseif current_dir:match("-feature-") or current_dir:match("-bugfix-") or current_dir:match("-refactor-") then
         local parent = current_dir:match("(.*/[^/]+)%-[^/]+%-[^/]+$")
-        if parent and vim.fn.filereadable(parent .. "/Code/dev_cli.py") == 1 then
-          dev_cli_path = parent .. "/Code/dev_cli.py"
+        if parent and vim.fn.filereadable(parent .. "/code/dev_cli.py") == 1 then
+          dev_cli_path = parent .. "/code/dev_cli.py"
         end
       -- Fallback to known ModelChecker location
-      elseif vim.fn.filereadable("/home/benjamin/Documents/Philosophy/Projects/ModelChecker/Code/dev_cli.py") == 1 then
-        dev_cli_path = "/home/benjamin/Documents/Philosophy/Projects/ModelChecker/Code/dev_cli.py"
+      elseif vim.fn.filereadable("/home/benjamin/Documents/Philosophy/Projects/ModelChecker/code/dev_cli.py") == 1 then
+        dev_cli_path = "/home/benjamin/Documents/Philosophy/Projects/ModelChecker/code/dev_cli.py"
       end
 
       if dev_cli_path then
         local file = vim.fn.expand("%:p:r") .. ".py"
         vim.cmd(string.format("TermExec cmd='%s %s'", dev_cli_path, file))
       else
-        vim.notify("Could not find Code/dev_cli.py in project", vim.log.levels.ERROR)
+        vim.notify("Could not find code/dev_cli.py in project", vim.log.levels.ERROR)
       end
     end
 
@@ -173,10 +174,6 @@ return {
       return true, message, nil
     end
 
-    local function is_latex()
-      return vim.tbl_contains({ "tex", "latex", "bib", "cls", "sty" }, vim.bo.filetype)
-    end
-
     local function is_python()
       return vim.bo.filetype == "python"
     end
@@ -220,14 +217,25 @@ return {
     -- ============================================================================
 
     wk.add({
+      { "<leader>b", "<cmd>lua CloseOtherBuffers()<CR>", desc = "close other buffers", icon = "󰅚" },
       { "<leader>c", "<cmd>vert sb<CR>", desc = "create split", icon = "󰯌" },
-      { "<leader>d", "<cmd>update! | lua smart_bufdelete()<CR>", desc = "delete buffer", icon = "󰩺" },
+      { "<leader>d", "<cmd>lua if vim.fn.filereadable(vim.fn.expand('%')) == 1 then vim.cmd('update!') end; smart_bufdelete()<CR>", desc = "delete buffer", icon = "󰩺" },
       { "<leader>e", "<cmd>Neotree toggle<CR>", desc = "explorer", icon = "󰙅" },
       { "<leader>k", "<cmd>close<CR>", desc = "kill split", icon = "󰆴" },
       { "<leader>q", "<cmd>wa! | qa!<CR>", desc = "quit", icon = "󰗼" },
       { "<leader>u", "<cmd>Telescope undo<CR>", desc = "undo", icon = "󰕌" },
       { "<leader>w", "<cmd>wa!<CR>", desc = "write", icon = "󰆓" },
     })
+
+    -- CloseOtherBuffers: Close all listed buffers except the current one
+    _G.CloseOtherBuffers = function()
+      local current = vim.api.nvim_get_current_buf()
+      for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+        if buf ~= current and vim.api.nvim_buf_is_valid(buf) and vim.bo[buf].buflisted then
+          vim.api.nvim_buf_delete(buf, { force = false })
+        end
+      end
+    end
 
     -- Global AI toggles are now in keymaps.lua for centralized management
 
@@ -238,24 +246,52 @@ return {
     wk.add({
       { "<leader>a", group = "ai", icon = "󰚩", mode = { "n", "v" } },
 
-      -- Claude AI commands
-      { "<leader>ac", "<cmd>ClaudeCommands<CR>", desc = "claude commands", icon = "󰘳" },
-      { "<leader>ac",
-        function() require("neotex.plugins.ai.claude.core.visual").send_visual_to_claude_with_prompt() end,
-        desc = "send selection to claude with prompt",
-        mode = { "v" },
-        icon = "󰘳"
-      },
-      { "<leader>as", function() require("neotex.plugins.ai.claude").resume_session() end, desc = "claude sessions", icon = "󰑐" },
+      -- Claude AI commands (replaced by unified <leader>al picker)
+      -- { "<leader>as", function()
+      --   local ok, picker = pcall(require, "neotex.plugins.ai.shared.picker.ai-tool-picker")
+      --   if not ok then
+      --     vim.notify("AI tool picker module not loaded", vim.log.levels.WARN)
+      --     return
+      --   end
+      --   if not picker._initialized then picker.setup() end
+      --   picker.show_tool_picker()
+      -- end, desc = "ai tool picker", icon = "󰚩" },
+      { "<leader>al", function()
+        local ok, picker = pcall(require, "neotex.plugins.ai.shared.picker.ai-tool-picker")
+        if not ok then
+          vim.notify("AI tool picker module not loaded", vim.log.levels.WARN)
+          return
+        end
+        if not picker._initialized then picker.setup() end
+        picker.show_commands_picker()
+      end, desc = "ai load commands/agents", mode = { "n" }, icon = "󰚩" },
+      { "<leader>al", function()
+        local ok, picker = pcall(require, "neotex.plugins.ai.shared.picker.ai-tool-picker")
+        if not ok then
+          vim.notify("AI tool picker module not loaded", vim.log.levels.WARN)
+          return
+        end
+        if not picker._initialized then picker.setup() end
+        picker.show_commands_picker()
+      end, desc = "ai send selection with prompt", mode = { "v" }, icon = "󰚩" },
+      { "<leader>ac", function()
+        local ok, picker = pcall(require, "neotex.plugins.ai.shared.picker.ai-tool-picker")
+        if not ok then
+          vim.notify("AI tool picker module not loaded", vim.log.levels.WARN)
+          return
+        end
+        if not picker._initialized then picker.setup() end
+        picker.show_tool_picker()
+      end, desc = "ai agent picker", icon = "󰚩" },
 
       -- OpenCode AI commands
       -- { "<leader>aa", function() require("opencode").ask() end, desc = "opencode ask", icon = "󰘳", mode = { "n", "v" } },
-      { "<leader>ab", function() require("opencode").prompt("@buffer") end, desc = "opencode buffer context", icon = "󰈙" },
+      -- { "<leader>ab", function() require("opencode").prompt("@buffer") end, desc = "opencode buffer context", icon = "󰈙" },
       { "<leader>ad", function() require("opencode").prompt("@diagnostics") end, desc = "opencode diagnostics", icon = "󰒓" },
-      { "<leader>as", function() require("opencode").select() end, desc = "opencode select", icon = "󰒋" },
-      { "<leader>ah", function() require("opencode").command("session.list") end, desc = "opencode history", icon = "󰆼" },
+      { "<leader>as", "<cmd>DiscordSessions<CR>", desc = "discord sessions", icon = "󰙯" },
+      { "<leader>ar", "<cmd>OpenCodeLinkDiscord<CR>", desc = "link discord", icon = "󰙯" },
+      -- { "<leader>ah", function() require("opencode").command("session.list") end, desc = "opencode history", icon = "󰆼" },
       -- { "<leader>ai", function() require("opencode").command("session.new") end, desc = "opencode init session", icon = "󰐕" },
-      -- { "<leader>ao", function() require("opencode").toggle() end, desc = "opencode toggle", icon = "󰚩" },
       -- { "<leader>ap", function() require("opencode").prompt("@this") end, desc = "opencode prompt", icon = "󰏪", mode = { "n", "v" } },
 
       -- TTS toggle - project-specific only (DISABLED: 2025-12-09 - User preference)
@@ -264,7 +300,7 @@ return {
 
       --   if vim.fn.filereadable(config_path) ~= 1 then
       --     notify.editor(
-      --       "No TTS config found. Use <leader>ac to create project-specific config.",
+      --       "No TTS config found. Use <leader>al to create project-specific config.",
       --       notify.categories.ERROR,
       --       { project_root = vim.fn.getcwd() }
       --     )
@@ -346,6 +382,99 @@ return {
           { config_path = config_path, yolo_enabled = yolo_enabled }
         )
       end, desc = "toggle yolo mode", icon = "󰒓" },
+
+      -- Kill all Claude Code session sleep inhibitors
+      { "<leader>ak", function()
+        local files = vim.fn.glob("/tmp/claude-inhibitor-*.pid", false, true)
+        if #files == 0 then
+          vim.notify("No active Claude sleep inhibitors", vim.log.levels.INFO)
+          return
+        end
+        for _, f in ipairs(files) do
+          local lines = vim.fn.readfile(f)
+          local pid = lines and lines[1] and vim.fn.trim(lines[1]) or ""
+          if pid ~= "" then
+            vim.fn.system("kill " .. pid .. " 2>/dev/null")
+          end
+          vim.fn.delete(f)
+        end
+        vim.notify(string.format("Released %d Claude sleep inhibitor(s)", #files), vim.log.levels.INFO)
+      end, desc = "kill sleep inhibitors", icon = "󰒲" },
+
+      -- Model picker - select Claude Code model (DISABLED)
+      -- { "<leader>am", function()
+      --   local function get_claude_settings_path()
+      --     local git = require("neotex.plugins.ai.claude.claude-session.git")
+      --     if git.is_git_repo() then
+      --       local git_root = git.get_git_root()
+      --       if git_root and git_root ~= "" then
+      --         local claude_dir = git_root .. "/.claude"
+      --         if vim.fn.isdirectory(claude_dir) == 0 then
+      --           vim.fn.mkdir(claude_dir, "p")
+      --         end
+      --         return claude_dir .. "/settings.local.json", "project"
+      --       end
+      --     end
+      --     return vim.fn.expand("~/.claude/settings.local.json"), "global"
+      --   end
+      --
+      --   local config_path, config_scope = get_claude_settings_path()
+      --
+      --   local models = {
+      --     { id = "opus", label = "Opus 4.6 (1M)" },
+      --     { id = "sonnet", label = "Sonnet 4.6" },
+      --     { id = "haiku", label = "Haiku 4.5" },
+      --   }
+      --
+      --   local current_model = nil
+      --   local file = io.open(config_path, "r")
+      --   if file then
+      --     local content = file:read("*all")
+      --     file:close()
+      --     local ok, settings = pcall(vim.fn.json_decode, content)
+      --     if ok and settings and settings.model then
+      --       current_model = settings.model
+      --     end
+      --   end
+      --
+      --   vim.ui.select(models, {
+      --     prompt = "Select Claude model:",
+      --     format_item = function(item)
+      --       local marker = (item.id == current_model) and " [*]" or ""
+      --       return string.format("%s%s", item.label, marker)
+      --     end,
+      --   }, function(choice)
+      --     if not choice then return end
+      --     local settings = {}
+      --     local read_file = io.open(config_path, "r")
+      --     if read_file then
+      --       local content = read_file:read("*all")
+      --       read_file:close()
+      --       local ok, data = pcall(vim.fn.json_decode, content)
+      --       if ok and data then settings = data end
+      --     end
+      --     if choice.id then
+      --       settings.model = choice.id
+      --     else
+      --       settings.model = nil
+      --     end
+      --     local write_ok, write_err = pcall(function()
+      --       local write_file = io.open(config_path, "w")
+      --       if not write_file then error("Cannot open file for writing") end
+      --       write_file:write(vim.fn.json_encode(settings))
+      --       write_file:close()
+      --     end)
+      --     if not write_ok then
+      --       notify.editor("Failed to write settings: " .. tostring(write_err), notify.categories.ERROR)
+      --       return
+      --     end
+      --     notify.editor(
+      --       string.format("Model set to %s (%s settings, takes effect on next Claude Code open)", choice.label, config_scope),
+      --       notify.categories.USER_ACTION,
+      --       { model = choice.id, scope = config_scope }
+      --     )
+      --   end)
+      -- end, desc = "model (claude)", icon = "󰘦" },
     })
 
     -- ============================================================================
@@ -489,29 +618,6 @@ return {
     })
 
     -- ============================================================================
-    -- <leader>l - LATEX GROUP
-    -- ============================================================================
-
-    wk.add({
-      -- Group header (static name, conditional visibility)
-      { "<leader>l", group = "latex", icon = "󰙩", cond = is_latex },
-
-      -- LaTeX-specific mappings
-      { "<leader>la", "<cmd>lua PdfAnnots()<CR>", desc = "annotate", icon = "󰏪", cond = is_latex },
-      { "<leader>lb", function() run_bibexport() end, desc = "bib export", icon = "󰈝", cond = is_latex },
-      { "<leader>lc", "<cmd>VimtexCompile<CR>", desc = "compile", icon = "󰖷", cond = is_latex },
-      { "<leader>le", "<cmd>VimtexErrors<CR>", desc = "errors", icon = "󰅚", cond = is_latex },
-      { "<leader>lf", "<cmd>terminal latexindent -w %:p:r.tex<CR>", desc = "format", icon = "󰉣", cond = is_latex },
-      { "<leader>lg", "<cmd>e ~/.config/nvim/templates/Glossary.tex<CR>", desc = "glossary", icon = "󰈚", cond = is_latex },
-      { "<leader>li", "<cmd>VimtexTocOpen<CR>", desc = "index", icon = "󰋽", cond = is_latex },
-      { "<leader>lk", "<cmd>VimtexClean<CR>", desc = "kill aux", icon = "󰩺", cond = is_latex },
-      { "<leader>lm", "<plug>(vimtex-context-menu)", desc = "menu", icon = "󰍉", cond = is_latex },
-      { "<leader>lv", "<cmd>VimtexView<CR>", desc = "view", icon = "󰛓", cond = is_latex },
-      { "<leader>lw", "<cmd>VimtexCountWords!<CR>", desc = "word count", icon = "󰆿", cond = is_latex },
-      { "<leader>lx", "<cmd>:VimtexClearCache All<CR>", desc = "clear cache", icon = "󰃢", cond = is_latex },
-    })
-
-    -- ============================================================================
     -- <leader>m - MAIL GROUP
     -- ============================================================================
 
@@ -525,6 +631,7 @@ return {
       { "<leader>mm", "<cmd>HimalayaToggle<CR>", desc = "toggle sidebar", icon = "󰊫" },
       { "<leader>ms", "<cmd>HimalayaSyncInbox<CR>", desc = "sync inbox", icon = "󰜉" },
       { "<leader>mS", "<cmd>HimalayaSyncFull<CR>", desc = "full sync", icon = "󰜉" },
+      { "<leader>mr", "<cmd>TermExec cmd='find ~/Mail/Logos -name .mbsyncstate -delete; find ~/Mail/Logos -name .uidvalidity -delete; rm -f /home/benjamin/Mail/.claude/output/email.md; mbsync logos'<CR><C-w>l", desc = "maildir resync", icon = "󰔟" },
       { "<leader>mt", "<cmd>HimalayaAutoSyncToggle<CR>", desc = "toggle auto-sync", icon = "󰑖" },
       { "<leader>mw", "<cmd>HimalayaWrite<CR>", desc = "write email", icon = "󰝒" },
       { "<leader>mW", "<cmd>HimalayaSetup<CR>", desc = "setup wizard", icon = "󰗀" },
@@ -647,35 +754,6 @@ return {
     })
 
     -- ============================================================================
-    -- <leader>T - TEMPLATES GROUP (LaTeX)
-    -- ============================================================================
-
-    wk.add({
-      -- Group header (static name, conditional visibility)
-      { "<leader>T", group = "templates", icon = "󰈭", cond = is_latex },
-
-      -- Template mappings
-      { "<leader>Ta", "<cmd>read ~/.config/nvim/templates/article.tex<CR>", desc = "article.tex", icon = "󰈙", cond = is_latex },
-      { "<leader>Tb", "<cmd>read ~/.config/nvim/templates/beamer_slides.tex<CR>", desc = "beamer_slides.tex", icon = "󰈙", cond = is_latex },
-      { "<leader>Tg", "<cmd>read ~/.config/nvim/templates/glossary.tex<CR>", desc = "glossary.tex", icon = "󰈙", cond = is_latex },
-      { "<leader>Th", "<cmd>read ~/.config/nvim/templates/handout.tex<CR>", desc = "handout.tex", icon = "󰈙", cond = is_latex },
-      { "<leader>Tl", "<cmd>read ~/.config/nvim/templates/letter.tex<CR>", desc = "letter.tex", icon = "󰈙", cond = is_latex },
-      { "<leader>Tm", "<cmd>read ~/.config/nvim/templates/MultipleAnswer.tex<CR>", desc = "MultipleAnswer.tex", icon = "󰈙", cond = is_latex },
-      { "<leader>Tr", function()
-        local template_dir = vim.fn.expand("~/.config/nvim/templates/report")
-        local current_dir = vim.fn.getcwd()
-        vim.fn.system("cp -r " .. vim.fn.shellescape(template_dir) .. " " .. vim.fn.shellescape(current_dir))
-        require('neotex.util.notifications').editor('Template copied', require('neotex.util.notifications').categories.USER_ACTION, { template = 'report', directory = current_dir })
-      end, desc = "Copy report/ directory", icon = "󰉖", cond = is_latex },
-      { "<leader>Ts", function()
-        local template_dir = vim.fn.expand("~/.config/nvim/templates/springer")
-        local current_dir = vim.fn.getcwd()
-        vim.fn.system("cp -r " .. vim.fn.shellescape(template_dir) .. " " .. vim.fn.shellescape(current_dir))
-        require('neotex.util.notifications').editor('Template copied', require('neotex.util.notifications').categories.USER_ACTION, { template = 'springer', directory = current_dir })
-      end, desc = "Copy springer/ directory", icon = "󰉖", cond = is_latex },
-    })
-
-    -- ============================================================================
     -- <leader>x - TEXT GROUP
     -- ============================================================================
 
@@ -686,6 +764,40 @@ return {
       { "<leader>xd", desc = "toggle diff overlay", icon = "󰦓" },
       { "<leader>xs", desc = "split/join toggle", icon = "󰤋", mode = { "n", "v" } },
       { "<leader>xw", desc = "toggle word diff", icon = "󰦓" },
+    })
+
+    -- ============================================================================
+    -- <leader>x - PROCESS MANAGEMENT (within text group)
+    -- ============================================================================
+
+    local function process_launch()
+      local ok, process = pcall(require, "neotex.util.process")
+      if ok then
+        process.launch()
+      else
+        vim.notify("Process manager not available", vim.log.levels.WARN)
+      end
+    end
+
+    wk.add({
+      { "<leader>xl", process_launch, desc = "launch", icon = "" },
+      { "<leader>xp", function()
+        local ok, picker = pcall(require, "neotex.plugins.tools.process-picker")
+        if ok then
+          picker.show()
+        else
+          vim.notify("Process picker not available", vim.log.levels.WARN)
+        end
+      end, desc = "processes", icon = "󰒋" },
+      { "<leader>xk", function()
+        local ok, process = pcall(require, "neotex.util.process")
+        if ok then
+          process.stop_all()
+          vim.notify("All processes stopped", vim.log.levels.INFO)
+        else
+          vim.notify("Process manager not available", vim.log.levels.WARN)
+        end
+      end, desc = "kill all", icon = "󰅚" },
     })
 
     -- ============================================================================

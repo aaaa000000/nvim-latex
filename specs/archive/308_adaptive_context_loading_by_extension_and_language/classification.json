@@ -1,0 +1,73 @@
+{
+  "classification_rules": {
+    "universal": {
+      "description": "Files needed by all agents/languages",
+      "load_when": {"always": true},
+      "paths": [
+        "README.md",
+        "reference/README.md",
+        "checkpoints/README.md",
+        "patterns/jq-escaping-workarounds.md"
+      ]
+    },
+    "meta_language": {
+      "description": "Files for meta (system) language tasks",
+      "load_when": {"languages": ["meta"]},
+      "paths_by_subdomain": {
+        "architecture": "all",
+        "orchestration": "all",
+        "meta": "all",
+        "templates": "all",
+        "standards": "most",
+        "workflows": "most"
+      }
+    },
+    "planner_agent": {
+      "description": "Files for planner-agent",
+      "load_when": {"agents": ["planner-agent"]},
+      "paths": [
+        "formats/plan-format.md",
+        "workflows/task-breakdown.md",
+        "processes/planning-workflow.md"
+      ]
+    },
+    "research_agent": {
+      "description": "Files for general-research-agent",
+      "load_when": {"agents": ["general-research-agent"]},
+      "paths": [
+        "formats/report-format.md",
+        "processes/research-workflow.md"
+      ]
+    },
+    "implementation_agent": {
+      "description": "Files for general-implementation-agent",
+      "load_when": {"agents": ["general-implementation-agent"]},
+      "paths": [
+        "formats/summary-format.md",
+        "processes/implementation-workflow.md",
+        "patterns/checkpoint-execution.md",
+        "patterns/early-metadata-pattern.md"
+      ]
+    },
+    "meta_builder_agent": {
+      "description": "Files for meta-builder-agent",
+      "load_when": {"agents": ["meta-builder-agent"]},
+      "paths": [
+        "meta/meta-guide.md",
+        "meta/architecture-principles.md",
+        "meta/standards-checklist.md",
+        "templates/agent-template.md",
+        "templates/command-template.md",
+        "templates/thin-wrapper-skill.md"
+      ]
+    },
+    "code_reviewer_agent": {
+      "description": "Files for code-reviewer-agent",
+      "load_when": {"agents": ["code-reviewer-agent"]},
+      "paths": [
+        "workflows/review-process.md",
+        "standards/code-patterns.md"
+      ]
+    }
+  }
+}

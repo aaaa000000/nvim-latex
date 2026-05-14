@@ -6,6 +6,24 @@ This document defines the standard patterns for commands, skills, and agents tha
 
 Multi-task creation involves discovering potential work items, presenting them to users for selection, organizing them into coherent tasks, establishing dependencies, and inserting them into state.json/TODO.md in the correct order.
 
+## Task Minimization Principle
+
+**Fewer, well-scoped tasks are better than many fragmented ones.**
+
+Multi-task creators should proactively analyze user-provided items and suggest consolidation opportunities. This principle applies because:
+
+1. **Reduced Context Switching**: Each task requires research, planning, and implementation phases. Consolidating related work reduces overhead.
+2. **Better Coherence**: Related changes implemented together are more likely to be consistent and well-integrated.
+3. **Clearer Progress**: Fewer tasks make TODO.md more navigable and progress more visible.
+4. **Dependency Simplification**: Consolidated tasks have simpler dependency graphs.
+
+**Implementation**: Commands should implement automatic topic clustering (like `/meta`'s Stage 3.5 and `/fix-it`'s topic grouping) to identify related items and offer consolidation options before task creation.
+
+**User Control**: Consolidation should always be presented as a suggestion with three options:
+- Accept suggested groups (recommended for related items)
+- Keep as separate tasks (user preference)
+- Customize groupings (fine-grained control)
+
 ## Core Components
 
 Multi-task creators implement these 8 components. Components marked **Required** must be implemented; **Optional** components enhance the user experience but may be omitted based on context.
@@ -17,7 +35,7 @@ Identify items that could become tasks from various sources.
 **Sources by Command**:
 | Command | Discovery Source |
 |---------|------------------|
-| `/learn` | FIX:, NOTE:, TODO: tags in source files |
+| `/fix-it` | FIX:, NOTE:, TODO:, QUESTION: tags in source files |
 | `/meta` | User interview responses |
 | `/review` | Code analysis findings + roadmap items |
 | `/errors` | Error patterns from errors.json |
@@ -25,7 +43,7 @@ Identify items that could become tasks from various sources.
 
 **Implementation**:
 ```bash
-# Example: /learn tag discovery
+# Example: /fix-it tag discovery
 grep -rn --include="*.lua" "-- FIX:" $paths 2>/dev/null || true
 grep -rn --include="*.lua" "-- NOTE:" $paths 2>/dev/null || true
 grep -rn --include="*.lua" "-- TODO:" $paths 2>/dev/null || true
@@ -52,22 +70,27 @@ Use AskUserQuestion with multiSelect for item selection.
 - Empty selection = graceful exit, no tasks created
 - Present items in priority order (highest first)
 
-**Example from /learn**:
+**Example from /fix-it**:
 ```json
 {
   "question": "Select TODO items to create as tasks:",
   "header": "TODO Selection",
   "multiSelect": true,
   "options": [
-    {"label": "Add LSP configuration", "description": "nvim/lua/plugins/lsp.lua:67"},
-    {"label": "Implement helper function", "description": "utils/helpers.lua:23"}
+    {"label": "Add API configuration", "description": "src/config/api.py:67"},
+    {"label": "Implement helper function", "description": "src/utils/helpers.py:23"}
   ]
 }
 ```
 
-### 3. Topic Grouping (Optional)
+### 3. Topic Grouping (Optional but Recommended)
 
-Cluster related items into coherent task groups when 2+ items are selected.
+Cluster related items into coherent task groups when 2+ items are selected. This implements the **Task Minimization Principle** - proactively suggesting consolidation opportunities rather than passively accepting user-provided breakdowns.
+
+**Automatic Topic Clustering** (implemented by `/meta` Stage 3.5 and `/fix-it`):
+- Extract topic indicators: key terms, component type, affected area, action type
+- Cluster by shared indicators (2+ key terms OR same component_type AND affected_area)
+- Present consolidation options before task creation
 
 **Clustering Algorithm**:
 ```
@@ -244,7 +267,7 @@ Always show task summary and require explicit confirmation before creating tasks
 ```markdown
 **Tasks to Create** ({N} total):
 
-| # | Title | Language | Effort | Dependencies |
+| # | Title | Task Type | Effort | Dependencies |
 |---|-------|----------|--------|--------------|
 | 37 | Add sorting | meta | 2h | None |
 | 38 | Update insertion | meta | 1h | Task #37 |
@@ -277,7 +300,7 @@ Update state.json and TODO.md atomically with correct dependency information.
   "project_number": 36,
   "project_name": "task_slug",
   "status": "not_started",
-  "language": "meta",
+  "task_type": "meta",
   "dependencies": [35, 34],
   "created": "2026-02-03T12:00:00Z",
   "last_updated": "2026-02-03T12:00:00Z"
@@ -289,7 +312,7 @@ Update state.json and TODO.md atomically with correct dependency information.
 ### 36. Task Title
 - **Effort**: 2 hours
 - **Status**: [NOT STARTED]
-- **Language**: meta
+- **Task Type**: meta
 - **Dependencies**: Task #35, Task #34
 
 **Description**: Task description here.
@@ -304,10 +327,29 @@ batch_entries = []
 for position, task_idx in enumerate(sorted_indices):
     batch_entries.append(format_entry(task_idx))
 
-# Join and insert entire batch after ## Tasks heading
+# Join all entries (foundational tasks first in the string)
 batch_markdown = "\n\n".join(batch_entries)
-insert_after_heading("## Tasks", batch_markdown)
 ```
+
+**WARNING**: DO NOT search for the last `---` separator and append text.
+DO NOT insert at the bottom of the file.
+ALWAYS use the heading-anchored Edit tool pattern with `oldString: "## Tasks\n"`.
+The heading `## Tasks` is unique in TODO.md and is the only reliable insertion anchor.
+
+**Insert the batch** using the Edit tool to prepend at the TOP of the Tasks section:
+
+```
+oldString: "## Tasks\n"
+newString: "## Tasks\n\n{batch_markdown}\n"
+```
+
+This prepends the batch immediately after the `## Tasks` heading, before any existing task entries.
+
+**Verify insertion**: After inserting, re-read the first few lines after `## Tasks` using the Read tool:
+- Confirm the first task after `## Tasks` has the expected foundational task number
+- If it doesn't match, the insertion went wrong — fix and re-verify
+
+> **Precedent for multi-task creators**: All commands, skills, and agents that create multiple tasks (including /fix-it, /review, /errors, /spawn, and /task --review) should adopt this heading-anchored Edit tool pattern for TODO.md insertions.
 
 **Why Batch Insertion**: Individual prepends reverse the order (last task at top). Batch insertion preserves topological order.
 
@@ -335,18 +377,22 @@ For any command/skill/agent that creates multiple tasks:
 
 ## Reference Implementation
 
-The `/meta` command and `meta-builder-agent` implement all 8 components:
+The `/meta` command and `meta-builder-agent` implement all 8 components plus enhanced features:
 
 | Component | Implementation Location |
 |-----------|-------------------------|
 | Discovery | Interview Stage 2-3 (GatherDomainInfo, IdentifyUseCases) |
 | Selection | Interview Stage 5 (ReviewAndConfirm with task list) |
-| Grouping | Interview Stage 3 (user-defined groupings) |
+| **Topic Clustering** | **Interview Stage 3.5 (AnalyzeTopics - automatic clustering)** |
+| Grouping | Interview Stage 3.5 (automatic) + Stage 3 (user refinement) |
 | Dependencies | Interview Stage 3 Question 5 (dependency interview) |
 | Ordering | Interview Stage 6 (Kahn's algorithm) |
 | Visualization | Interview Stage 7 (DeliverSummary with graph) |
 | Confirmation | Interview Stage 5 (mandatory confirmation) |
-| State Updates | Interview Stage 6 (batch insertion) |
+| State Updates | Interview Stage 6 (batch insertion with NOT STARTED status) |
+
+**Enhanced Stages** (added for Task Minimization Principle):
+- **Stage 3.5 (AnalyzeTopics)**: Extracts topic indicators, clusters by shared terms/components, presents consolidation picker
 
 See `.opencode/agents/meta-builder-agent.md` for complete implementation details.
 
@@ -354,13 +400,16 @@ See `.opencode/agents/meta-builder-agent.md` for complete implementation details
 
 | Command | Required | Grouping | Dependencies | Ordering | Visualization |
 |---------|----------|----------|--------------|----------|---------------|
-| `/meta` | Yes | Yes | Full DAG | Kahn's | Linear/Layered |
-| `/learn` | Yes | Yes | Internal only | No | No |
+| `/meta` | Yes | **Automatic** | Full DAG | Kahn's | Linear/Layered |
+| `/fix-it` | Yes | Yes | Internal only | No | No |
 | `/review` | Yes | Yes | No | No | No |
 | `/errors` | Partial* | No | No | No | No |
 | `/task --review` | Yes | No | parent_task | No | No |
 
 *`/errors` creates tasks automatically without interactive selection (intentional for error triage workflow).
+
+**Enhanced `/meta` Features**:
+- **Automatic Topic Clustering** (Stage 3.5): Proactively analyzes user-provided task breakdown and suggests consolidation opportunities
 
 ## Gaps and Future Enhancements
 
@@ -373,7 +422,7 @@ See `.opencode/agents/meta-builder-agent.md` for complete implementation details
 - **Rationale**: Automatic mode is intentional for quick error triage
 - **Enhancement**: Add `--interactive` flag for manual selection mode
 
-### /learn
+### /fix-it
 - **Gap**: No external dependency support (only internal learn-it -> fix-it)
 - **Enhancement**: Allow TODO tasks to depend on existing tasks
 
@@ -385,5 +434,5 @@ See `.opencode/agents/meta-builder-agent.md` for complete implementation details
 
 - `.opencode/rules/state-management.md` - Dependencies field schema
 - `.opencode/agents/meta-builder-agent.md` - Reference implementation
-- `.opencode/commands/learn.md` - Topic grouping example
+- `.opencode/commands/fix-it.md` - Topic grouping example
 - `.opencode/commands/review.md` - Issue grouping example

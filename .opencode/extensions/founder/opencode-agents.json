@@ -1,0 +1,94 @@
+{
+  "agent": {
+    "analyze": {
+      "description": "Competitive landscape research with positioning maps and battle cards",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/analyze-agent.md}",
+      "tools": {"read":true,"write":true,"edit":true,"glob":true,"grep":true,"bash":true,"webfetch":true,"websearch":true}
+    },
+    "deck-builder": {
+      "description": "Generate Slidev pitch decks from plans and research by assembling library content",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/deck-builder-agent.md}",
+      "tools": {"read":true,"write":true,"edit":true,"glob":true,"grep":true,"bash":true,"webfetch":true,"websearch":true}
+    },
+    "deck-planner": {
+      "description": "Pitch deck planning with interactive pattern, theme, content, and ordering selection using library",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/deck-planner-agent.md}",
+      "tools": {"read":true,"write":true,"edit":true,"glob":true,"grep":true,"bash":true,"webfetch":true,"websearch":true}
+    },
+    "deck-research": {
+      "description": "Pitch deck content research through material synthesis and slide mapping",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/deck-research-agent.md}",
+      "tools": {"read":true,"write":true,"edit":true,"glob":true,"grep":true,"bash":true,"webfetch":true,"websearch":true}
+    },
+    "finance": {
+      "description": "Financial analysis and verification with spreadsheet generation",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/finance-agent.md}",
+      "tools": {"read":true,"write":true,"edit":true,"glob":true,"grep":true,"bash":true,"webfetch":true,"websearch":true}
+    },
+    "financial-analysis": {
+      "description": "Financial analysis with forcing questions, XLSX generation, and JSON metrics export",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/financial-analysis-agent.md}",
+      "tools": {"read":true,"write":true,"edit":true,"glob":true,"grep":true,"bash":true,"webfetch":true,"websearch":true}
+    },
+    "founder-implement": {
+      "description": "Execute founder plans and generate strategy reports using plan and research context",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/founder-implement-agent.md}",
+      "tools": {"read":true,"write":true,"edit":true,"glob":true,"grep":true,"bash":true,"webfetch":true,"websearch":true}
+    },
+    "founder-plan": {
+      "description": "Create founder analysis plans by reading research reports",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/founder-plan-agent.md}",
+      "tools": {"read":true,"write":true,"edit":true,"glob":true,"grep":true,"bash":true,"webfetch":true,"websearch":true}
+    },
+    "founder-spreadsheet": {
+      "description": "Cost breakdown spreadsheet generation with forcing questions",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/founder-spreadsheet-agent.md}",
+      "tools": {"read":true,"write":true,"edit":true,"glob":true,"grep":true,"bash":true,"webfetch":true,"websearch":true}
+    },
+    "legal-analysis": {
+      "description": "Legal design partner for product descriptions and marketing materials",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/legal-analysis-agent.md}",
+      "tools": {"read":true,"write":true,"edit":true,"glob":true,"grep":true,"bash":true,"webfetch":true,"websearch":true}
+    },
+    "legal-council": {
+      "description": "Contract review and negotiation counsel for AI startup founders",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/legal-council-agent.md}",
+      "tools": {"read":true,"write":true,"edit":true,"glob":true,"grep":true,"bash":true,"webfetch":true,"websearch":true}
+    },
+    "market": {
+      "description": "Market sizing research with TAM/SAM/SOM framework using forcing questions",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/market-agent.md}",
+      "tools": {"read":true,"write":true,"edit":true,"glob":true,"grep":true,"bash":true,"webfetch":true,"websearch":true}
+    },
+    "meeting": {
+      "description": "Investor meeting note processor with web research and CSV tracking",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/meeting-agent.md}",
+      "tools": {"read":true,"write":true,"edit":true,"glob":true,"grep":true,"bash":true,"webfetch":true,"websearch":true}
+    },
+    "project": {
+      "description": "Project research with WBS, PERT estimation, and resource analysis",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/project-agent.md}",
+      "tools": {"read":true,"write":true,"edit":true,"glob":true,"grep":true,"bash":true,"webfetch":true,"websearch":true}
+    },
+    "strategy": {
+      "description": "Go-to-market strategy research with positioning, channels, and planning context",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/strategy-agent.md}",
+      "tools": {"read":true,"write":true,"edit":true,"glob":true,"grep":true,"bash":true,"webfetch":true,"websearch":true}
+    }
+  }
+}

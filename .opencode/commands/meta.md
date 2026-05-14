@@ -4,9 +4,13 @@ allowed-tools: Skill
 argument-hint: [PROMPT] | --analyze
 ---
 
+> **COMMAND EXECUTION MODE** — You have been invoked as this command with arguments: `$ARGUMENTS`. Execute the workflow below immediately. Do not summarize this file, ask what to do with it, or describe its contents. Start execution now.
+
 # /meta Command
 
 Interactive system builder that delegates to `skill-meta` for creating TASKS for .opencode/ system changes. This command NEVER implements changes directly - it only creates tasks.
+
+**Reference Implementation**: This command is the reference implementation for the multi-task creation standard. See `.opencode/docs/reference/standards/multi-task-creation-standard.md` for the complete standard specification.
 
 ## Arguments
 
@@ -18,7 +22,7 @@ Interactive system builder that delegates to `skill-meta` for creating TASKS for
 
 **FORBIDDEN** - This command MUST NOT:
 - Directly create commands, skills, rules, or context files
-- Directly modify CLAUDE.md or README.md
+- Directly modify AGENTS.md or README.md
 - Implement any work without user confirmation
 - Write any files outside specs/
 
@@ -27,6 +31,27 @@ Interactive system builder that delegates to `skill-meta` for creating TASKS for
 - Require explicit user confirmation before creating any tasks
 - Create task directories for each task
 - Delegate execution to skill-meta
+
+## Anti-Bypass Constraint
+
+**PROHIBITION**: The /meta command and its delegated agents MUST NOT create or modify files in `.opencode/` directly using Write or Edit tools. All `.opencode/` file creation and modification MUST happen through the standard task lifecycle: /meta creates tasks, then /research -> /plan -> /implement executes them via the Skill tool delegation chain.
+
+**Scope**: This prohibition covers all paths under `.opencode/` including:
+- `.opencode/commands/*`
+- `.opencode/skills/*`
+- `.opencode/agent/subagents/*`
+- `.opencode/rules/*`
+- `.opencode/context/*`
+- `*/AGENTS.md`
+
+**Exclusion**: Writes to `specs/` paths (TODO.md, state.json, task directories) are legitimate and expected.
+
+**Why**: The delegation chain (command -> skill -> agent) ensures format compliance, validation, and audit trails. Bypassing any layer degrades artifact quality and breaks the enforcement model. A PostToolUse hook (`validate-meta-write.sh`) provides corrective context when bypass is attempted.
+
+**Enforcement**: Three-layer enforcement prevents bypass:
+1. This Anti-Bypass section (command-level prohibition)
+2. PostToolUse hook `validate-meta-write.sh` (runtime detection with corrective context)
+3. Skill and agent reinforcement (delegation requirement in skill-meta and meta-builder-agent)
 
 ## Execution
 
@@ -104,17 +129,17 @@ Example: `/meta --analyze`
 ### Tasks Created
 
 ```
-## Tasks Created
+Tasks Created
 
 Created {N} task(s) for {domain}:
 
-**High Priority**:
+High Priority:
 - Task #{N}: {title}
   Path: specs/{NNN}_{slug}/
 
-**Next Steps**:
+Next Steps:
 1. Review tasks in TODO.md
-2. Run `/research {N}` to begin research on first task
+2. Run /research {N} to begin research on first task
 3. Progress through /research -> /plan -> /implement cycle
 ```
 
@@ -185,3 +210,22 @@ agent: {agent-name}
 ### Agent Template Reference
 
 See `.opencode/docs/guides/creating-agents.md` for full 8-stage workflow template.
+
+## Standards Reference
+
+This command implements all 8 components of the multi-task creation standard.
+
+**Compliance Level**: Full (reference implementation)
+
+| Component | Status | Implementation |
+|-----------|--------|----------------|
+| Discovery | Yes | Interview Stage 2-3 |
+| Selection | Yes | Interview Stage 5 (ReviewAndConfirm) |
+| Grouping | Yes | User-defined in Stage 3 |
+| Dependencies | Full | Stage 3 Question 5 (internal + external) |
+| Ordering | Yes | Stage 6 (Kahn's algorithm) |
+| Visualization | Yes | Stage 7 (linear chain / layered DAG) |
+| Confirmation | Yes | Stage 5 (mandatory) |
+| State Updates | Yes | Stage 6 (batch insertion) |
+
+See `meta-builder-agent.md` for complete implementation details.

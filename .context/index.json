@@ -1,0 +1,7 @@
+{
+  "version": "1.0",
+  "generated": "2026-03-25T00:00:00Z",
+  "scope": "project",
+  "description": "Project-specific conventions and domain knowledge not covered by extensions. Independent from .memory/ — both loaded in parallel for project knowledge.",
+  "entries": []
+}

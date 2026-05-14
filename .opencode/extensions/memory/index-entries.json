@@ -1,0 +1,39 @@
+{
+  "entries": [
+    {
+      "path": "project/memory/learn-usage.md",
+      "description": "Usage guide for /learn command and memory management",
+      "load_when": {
+        "skills": ["skill-memory"],
+        "commands": ["/learn"]
+      },
+      "line_count": 150
+    },
+    {
+      "path": "project/memory/memory-setup.md",
+      "description": "MCP server setup for Obsidian memory vault",
+      "load_when": {
+        "skills": ["skill-memory"],
+        "commands": ["/learn"]
+      },
+      "line_count": 120
+    },
+    {
+      "path": "project/memory/memory-troubleshooting.md",
+      "description": "Troubleshooting guide for memory system issues",
+      "load_when": {
+        "skills": ["skill-memory"]
+      },
+      "line_count": 250
+    },
+    {
+      "path": "project/memory/knowledge-capture-usage.md",
+      "description": "Example workflows for knowledge capture system",
+      "load_when": {
+        "skills": ["skill-memory"],
+        "commands": ["/learn"]
+      },
+      "line_count": 180
+    }
+  ]
+}

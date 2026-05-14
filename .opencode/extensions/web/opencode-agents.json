@@ -1,0 +1,16 @@
+{
+  "agent": {
+    "web-implementation": {
+      "description": "Implement web (Astro/Tailwind/TypeScript) changes from plans",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/web-implementation-agent.md}",
+      "tools": {"write":true,"edit":true,"bash":true,"read":true,"glob":true,"grep":true}
+    },
+    "web-research": {
+      "description": "Research web development tasks using Astro, Tailwind CSS v4, and Cloudflare documentation",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/web-research-agent.md}",
+      "tools": {"read":true,"write":true,"edit":true,"glob":true,"grep":true,"bash":true,"webfetch":true,"websearch":true}
+    }
+  }
+}

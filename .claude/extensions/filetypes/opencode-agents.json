@@ -1,0 +1,69 @@
+{
+  "agent": {
+    "filetypes-router": {
+      "description": "Routes file conversion tasks to appropriate specialist agents",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/filetypes-router-agent.md}",
+      "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "glob": true,
+        "grep": true,
+        "bash": true
+      }
+    },
+    "document": {
+      "description": "Convert and process document files (DOCX, PDF, etc.)",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/document-agent.md}",
+      "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "glob": true,
+        "grep": true,
+        "bash": true
+      }
+    },
+    "spreadsheet": {
+      "description": "Convert and process spreadsheet files (XLSX, CSV, etc.)",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/spreadsheet-agent.md}",
+      "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "glob": true,
+        "grep": true,
+        "bash": true
+      }
+    },
+    "presentation": {
+      "description": "Convert and process presentation files (PPTX, etc.)",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/presentation-agent.md}",
+      "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "glob": true,
+        "grep": true,
+        "bash": true
+      }
+    },
+    "xlsx": {
+      "description": "XLSX creation, editing, and analysis using openpyxl and pandas",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/sheet-agent.md}",
+      "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "glob": true,
+        "grep": true,
+        "bash": true
+      }
+    }
+  }
+}

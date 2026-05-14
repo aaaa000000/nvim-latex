@@ -1,6 +1,8 @@
 # Architecture Principles for Meta-Generated Systems
 
 **Purpose**: Core principles for designing .opencode system architectures
+
+**Version**: 1.0  
 **Last Updated**: 2025-12-29
 
 ---
@@ -127,7 +129,7 @@ All agents follow standardized 8-stage workflow:
 
 Stage 7 (Postflight) is critical for system consistency:
 - Validate all artifacts created successfully
-- Update TODO.md and state.json atomically (via status-sync-manager)
+- Update specs/TODO.md and specs/state.json atomically (via status-sync-manager)
 - Create scoped git commit (via git-workflow-manager)
 - Log any errors to errors.json
 
@@ -267,4 +269,4 @@ Build validation into every stage of the workflow.
 
 ---
 
-**Maintained By**: ProofChecker Development Team
+**Maintained By**: Logos/Theory Development Team

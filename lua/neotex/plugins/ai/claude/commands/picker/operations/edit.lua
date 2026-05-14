@@ -23,8 +23,9 @@ end
 --- Save local artifact to global directory
 --- @param artifact table Artifact data with filepath and name
 --- @param artifact_type string Type of artifact (for directory determination)
+--- @param picker_config table|nil Picker configuration with base_dir field
 --- @return boolean success
-function M.save_artifact_to_global(artifact, artifact_type)
+function M.save_artifact_to_global(artifact, artifact_type, picker_config)
   if not artifact or not artifact.filepath then
     helpers.notify("No artifact selected", "ERROR")
     return false
@@ -32,6 +33,7 @@ function M.save_artifact_to_global(artifact, artifact_type)
 
   local project_dir = vim.fn.getcwd()
   local global_dir = scan.get_global_dir()
+  local base_dir = (picker_config and picker_config.base_dir) or ".claude"
 
   -- Don't save if we're in the global directory
   if project_dir == global_dir then
@@ -70,7 +72,7 @@ function M.save_artifact_to_global(artifact, artifact_type)
   end
 
   -- Ensure global directory exists
-  local global_target_dir = global_dir .. "/.claude/" .. subdir
+  local global_target_dir = global_dir .. "/" .. base_dir .. "/" .. subdir
   helpers.ensure_directory(global_target_dir)
 
   -- Copy local file to global
@@ -106,8 +108,9 @@ end
 --- @param artifact table Artifact data
 --- @param artifact_type string Type of artifact
 --- @param parser table Parser module for dependency resolution
+--- @param picker_config table|nil Picker configuration with base_dir field
 --- @return boolean success
-function M.load_artifact_locally(artifact, artifact_type, parser)
+function M.load_artifact_locally(artifact, artifact_type, parser, picker_config)
   if not artifact or not artifact.name then
     helpers.notify("No artifact selected", "ERROR")
     return false
@@ -115,6 +118,7 @@ function M.load_artifact_locally(artifact, artifact_type, parser)
 
   local project_dir = vim.fn.getcwd()
   local global_dir = scan.get_global_dir()
+  local base_dir = (picker_config and picker_config.base_dir) or ".claude"
 
   -- Don't load if we're in the global directory
   if project_dir == global_dir then
@@ -141,7 +145,7 @@ function M.load_artifact_locally(artifact, artifact_type, parser)
   end
 
   -- Ensure local directory exists
-  local local_dir = project_dir .. "/.claude/" .. subdir
+  local local_dir = project_dir .. "/" .. base_dir .. "/" .. subdir
   helpers.ensure_directory(local_dir)
 
   -- Find global version
@@ -150,7 +154,7 @@ function M.load_artifact_locally(artifact, artifact_type, parser)
     global_filepath = artifact.filepath
   else
     -- Construct global filepath from global directory
-    global_filepath = global_dir .. "/.claude/" .. subdir .. "/" .. artifact.name
+    global_filepath = global_dir .. "/" .. base_dir .. "/" .. subdir .. "/" .. artifact.name
     if artifact_type == "command" or artifact_type == "skill" or artifact_type == "doc" then
       global_filepath = global_filepath .. ".md"
     elseif artifact_type == "hook" or artifact_type == "lib" or artifact_type == "script" or artifact_type == "test" then
@@ -196,9 +200,9 @@ function M.load_artifact_locally(artifact, artifact_type, parser)
     local command = artifact.command or artifact
     if command.dependent_commands and #command.dependent_commands > 0 then
       for _, dep_name in ipairs(command.dependent_commands) do
-        local dep_global_path = global_dir .. "/.claude/commands/" .. dep_name .. ".md"
+        local dep_global_path = global_dir .. "/" .. base_dir .. "/commands/" .. dep_name .. ".md"
         if helpers.is_file_readable(dep_global_path) then
-          local dep_local_path = project_dir .. "/.claude/commands/" .. dep_name .. ".md"
+          local dep_local_path = project_dir .. "/" .. base_dir .. "/commands/" .. dep_name .. ".md"
           local dep_content = helpers.read_file(dep_global_path)
           if dep_content and helpers.write_file(dep_local_path, dep_content) then
             total_loaded = total_loaded + 1

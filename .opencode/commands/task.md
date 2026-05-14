@@ -1,8 +1,10 @@
 ---
 description: Create, recover, divide, sync, or abandon tasks
-allowed-tools: Read(specs/*), Read(/tmp/*.json), Edit(specs/TODO.md), Bash(jq:*), Bash(git:*), Bash(mv:*), Bash(date:*), Bash(sed:*), Bash(cp:*), Bash(rm:*)
+allowed-tools: Read(specs/*), Edit(specs/TODO.md), Bash(jq:*), Bash(git:*), Bash(mv:*), Bash(date:*), Bash(sed:*), AskUserQuestion
 argument-hint: "description" | --recover N | --expand N | --sync | --abandon N | --review N
 ---
+
+> **COMMAND EXECUTION MODE** — You have been invoked as this command with arguments: `$ARGUMENTS`. Execute the workflow below immediately. Do not summarize this file, ask what to do with it, or describe its contents. Start execution now.
 
 # /task Command
 
@@ -36,7 +38,9 @@ Check $ARGUMENTS for flags:
 
 ## Create Task Mode (Default)
 
-When $ARGUMENTS contains a description (no flags):
+When $ARGUMENTS contains a description (no flags).
+
+**Directory Naming**: When artifacts are created, directories use 3-digit zero-padded task numbers (e.g., `015_task_name`). The padding is applied by artifact-writing agents using `printf "%03d" $task_num`. TODO.md and state.json use unpadded task numbers for readability.
 
 ### Steps
 
@@ -46,8 +50,8 @@ When $ARGUMENTS contains a description (no flags):
    ```
 
 2. **Parse description** from $ARGUMENTS:
-   - Remove any trailing flags (--effort, --language)
-   - Extract optional: effort, language
+   - Remove any trailing flags (--effort, --task-type)
+   - Extract optional: effort, task_type
 
 3. **Improve description** (transform raw input into well-structured task description):
 
@@ -79,10 +83,52 @@ When $ARGUMENTS contains a description (no flags):
    - Technical identifiers: `lean4`, `v4.3.0`, `#123`
    - Already well-formed descriptions (start with verb, proper capitalization)
 
-4. **Detect language** from keywords:
-   - "neovim", "plugin", "nvim", "lua" → neovim
+   **Transformation Examples**:
+
+   | Input | Output | Transformation Applied |
+   |-------|--------|------------------------|
+   | `prove_sorries_in_coherentconstruction` | `Prove sorries in CoherentConstruction` | Slug expansion + CamelCase preserved |
+   | `bug in modal evaluator` | `Fix bug in modal evaluator` | Verb inference (Fix) + capitalize |
+   | `documentation for new API` | `Update documentation for new API` | Verb inference (Update) |
+   | `tests for validation module` | `Add tests for validation module` | Verb inference (Add) |
+   | `new caching layer` | `Implement new caching layer` | Verb inference (Implement default) |
+   | `Update TODO.md header metrics` | `Update TODO.md header metrics` | No change (already well-formed) |
+   | `Fix the race condition in handlers` | `Fix the race condition in handlers` | No change (starts with verb) |
+   | `implement_option_b_canonical_models` | `Implement option b canonical models` | Slug expansion |
+
+   **Edge Cases**:
+   - Input with quotes: `Add "hello world" test` -> No change to quoted content
+   - Input with file path: `Fix bug in src/config/lsp.lua` -> Preserve path exactly
+   - Input with version: `Update to python v3.12` -> Preserve version identifier
+   - Input with issue ref: `Fix #123 memory leak` -> Preserve issue reference
+   - CamelCase preserved: `prove_CoherentConstruction_complete` -> `Prove CoherentConstruction complete`
+
+   **Action Verb Categories**:
+   - **Fix**: bug, error, issue, problem, failure, crash, regression
+   - **Update**: documentation, docs, readme, comments, config, settings
+   - **Add**: test, tests, spec, feature, support, capability
+   - **Implement**: (default for unrecognized patterns)
+
+4. **Detect task_type** from keywords:
    - "meta", "agent", "command", "skill" → meta
-   - "web", "website", "html", "css", "javascript", "react", "frontend" → web
+   - "lean", "lean4", "mathlib", "theorem", "proof" → lean4
+   - "latex", "tex", "document", "typeset" → latex
+   - "typst" → typst
+   - "python", "pytest", "pip" → python
+   - "z3", "smt", "solver", "constraint" → z3
+   - "nix", "nixos", "home-manager", "flake" → nix
+   - "web", "astro", "tailwind", "cloudflare" → web
+   - "epidemiology", "epi", "cohort", "case-control", "strobe" → epi:study
+   - "formal", "logic", "math", "physics", "modal", "kripke" → formal
+   - "deck", "slide", "presentation", "pitch deck" → founder:deck
+   - "spreadsheet", "sheet", "excel" → founder:sheet
+   - "finance", "financial", "revenue", "burn rate" → founder:finance
+   - "market size", "tam", "sam", "som" → founder:market
+   - "competitive", "competitor" → founder:analyze
+   - "strategy", "strategic", "roadmap" → founder:strategy
+   - "legal", "contract", "agreement" → founder:legal
+   - "project plan", "timeline", "milestone" → founder:project
+   - "founder", "go-to-market", "gtm" → founder
    - Otherwise → general
 
 5. **Create slug** from description:
@@ -98,13 +144,13 @@ When $ARGUMENTS contains a description (no flags):
         "project_number": {N},
         "project_name": "slug",
         "status": "not_started",
-        "language": "detected",
+        "task_type": "detected",
         "created": $ts,
         "last_updated": $ts
       }] + .active_projects' \
-     specs/state.json > /tmp/state.json && \
-     mv /tmp/state.json specs/state.json
-   ```
+     specs/state.json > specs/tmp/state.json && \
+     mv specs/tmp/state.json specs/state.json
+    ```
 
 7. **Update TODO.md** (TWO parts - frontmatter AND entry):
 
@@ -115,19 +161,33 @@ When $ARGUMENTS contains a description (no flags):
      specs/TODO.md
    ```
 
-   **Part B - Add task entry** by prepending to `## Tasks` section:
-   ```markdown
-   ### {N}. {Title}
-   - **Effort**: {estimate}
-   - **Status**: [NOT STARTED]
-   - **Language**: {language}
+   **Part B - Add task entry** by inserting after `## Tasks` heading:
 
-   **Description**: {description}
+   **Insertion**: Use the Edit tool with heading-anchored pattern:
+
+   ```
+   oldString: "## Tasks\n"
+   newString: "## Tasks\n\n### {N}. {Title}\n- **Effort**: {estimate}\n- **Status**: [NOT STARTED]\n- **Task Type**: {task_type}\n\n**Description**: {description}\n\n---\n"
    ```
 
-   **Insertion**: Use sed or Edit to insert the new task entry immediately after the `## Tasks` line, so new tasks appear at the top of the list.
+   **WARNING**: DO NOT search for the last `---` separator and append text after it.
+   DO NOT insert at the bottom of the file.
+   ALWAYS use the heading-anchored Edit tool pattern with `oldString: "## Tasks\n"`.
+   The heading `## Tasks` is unique in TODO.md and is the only reliable insertion anchor.
+
+   After inserting, re-read the first few lines after `## Tasks`:
+   - Confirm the first task after ## Tasks has the expected task number
+   - If it doesn't match, the insertion went wrong — fix and re-verify
 
    **CRITICAL**: Both state.json AND TODO.md frontmatter MUST have matching next_project_number values.
+
+   **Part C - Update Recommended Order section** (non-blocking):
+   ```bash
+   # Update Recommended Order section (non-blocking)
+   if source "$PROJECT_ROOT/.opencode/scripts/update-recommended-order.sh" 2>/dev/null; then
+       add_to_recommended_order "$next_num" || echo "Note: Failed to update Recommended Order"
+   fi
+   ```
 
 8. **Git commit**:
    ```
@@ -139,8 +199,10 @@ When $ARGUMENTS contains a description (no flags):
    ```
    Task #{N} created: {TITLE}
    Status: [NOT STARTED]
-   Language: {language}
+   Task Type: {task_type}
+   Artifacts path: specs/{NNN}_{SLUG}/  (created on first artifact)
    ```
+   Note: `{NNN}` is the 3-digit padded task number (e.g., `015` for task 15). Directories are created lazily when the first artifact is written.
 
 ## Recover Mode (--recover)
 
@@ -162,19 +224,19 @@ Parse task ranges after --recover (e.g., "343-345", "337, 343"):
    slug=$(echo "$task_data" | jq -r '.project_name')
    ```
 
-   **Move to active_projects via jq** (two-step to avoid jq escaping bug):
+   **Move to active_projects via jq** (two-step to avoid jq escaping bug - see `jq-escaping-workarounds.md`):
    ```bash
    # Step 1: Remove from archive using del() instead of map(select(!=))
    jq --arg num "$task_number" \
      'del(.completed_projects[] | select(.project_number == ($num | tonumber)))' \
-     specs/archive/state.json > /tmp/archive.json && \
-     mv /tmp/archive.json specs/archive/state.json
+    specs/archive/state.json > specs/tmp/archive.json && \
+    mv specs/tmp/archive.json specs/archive/state.json
 
    # Step 2: Add to active with status reset
-   jq --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --argjson task "$task_data" \
-     '.active_projects = [$task | .status = "not_started" | .last_updated = $ts] + .active_projects' \
-     specs/state.json > /tmp/state.json && \
-     mv /tmp/state.json specs/state.json
+    jq --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --argjson task "$task_data" \
+      '.active_projects = [$task | .status = "not_started" | .last_updated = $ts] + .active_projects' \
+      specs/state.json > specs/tmp/state.json && \
+      mv specs/tmp/state.json specs/state.json
    ```
 
    **Move project directory from archive** (handle both legacy unpadded and new padded formats):
@@ -189,7 +251,19 @@ Parse task ranges after --recover (e.g., "343-345", "337, 343"):
    ```
    Note: Recovered directories always use 3-digit padding regardless of source format.
 
-   **Update TODO.md**: Prepend recovered task entry to `## Tasks` section
+   **Update TODO.md**: Insert recovered task entry after `## Tasks` heading using Edit tool:
+
+   ```
+   oldString: "## Tasks\n"
+   newString: "## Tasks\n\n### {N}. {Title}\n- **Effort**: {estimate}\n- **Status**: [RECOVERED]\n- **Task Type**: {task_type}\n\n**Description**: {description}\n\n---\n"
+   ```
+
+   **WARNING**: DO NOT search for the last `---` separator and append text after it.
+   DO NOT insert at the bottom of the file.
+   ALWAYS use the heading-anchored Edit tool pattern with `oldString: "## Tasks\n"`.
+   The heading `## Tasks` is unique in TODO.md and is the only reliable insertion anchor.
+
+   After inserting, re-read the first few lines after `## Tasks` and verify.
 
 2. Git commit: "task: recover tasks {ranges}"
 
@@ -222,11 +296,10 @@ Parse task number and optional prompt:
        status: "expanded",
        subtasks: [list_of_subtask_numbers],
        last_updated: $ts
-     }' specs/state.json > /tmp/state.json && \
-     mv /tmp/state.json specs/state.json
-   ```
+      }' specs/state.json > specs/tmp/state.json && \
+      mv specs/tmp/state.json specs/state.json
 
-   **Also update TODO.md**: Change task status to `[EXPANDED]`
+    **Also update TODO.md**: Change task status to `[EXPANDED]`
 
 5. Git commit: "task {N}: expand into subtasks"
 
@@ -279,7 +352,7 @@ fi
 # Extract task metadata
 slug=$(echo "$task_data" | jq -r '.project_name')
 status=$(echo "$task_data" | jq -r '.status')
-language=$(echo "$task_data" | jq -r '.language // "general"')
+task_type=$(echo "$task_data" | jq -r '.task_type // "general"')
 ```
 
 ### Step 2: Load Task Artifacts
@@ -299,8 +372,11 @@ fi
 
 **Find and load plan file**:
 ```bash
-plan_dir="${task_dir}/plans"
-plan_file=$(ls -t "$plan_dir"/implementation-*.md 2>/dev/null | head -1)
+plan_file=""
+if [ -n "$task_dir" ]; then
+  plan_dir="${task_dir}/plans"
+  plan_file=$(ls -t "$plan_dir"/*.md 2>/dev/null | head -1)
+fi
 
 if [ -z "$plan_file" ]; then
   echo "No implementation plan found for task $task_number"
@@ -311,14 +387,20 @@ fi
 
 **Find and load summary file** (if exists):
 ```bash
-summary_dir="${task_dir}/summaries"
-summary_file=$(ls -t "$summary_dir"/implementation-summary-*.md 2>/dev/null | head -1)
+summary_file=""
+if [ -n "$task_dir" ]; then
+  summary_dir="${task_dir}/summaries"
+  summary_file=$(ls -t "$summary_dir"/*-summary.md 2>/dev/null | head -1)
+fi
 ```
 
 **Find research reports** (for context):
 ```bash
-reports_dir="${task_dir}/reports"
-research_files=$(ls "$reports_dir"/research-*.md 2>/dev/null)
+research_files=""
+if [ -n "$task_dir" ]; then
+  reports_dir="${task_dir}/reports"
+  research_files=$(ls "$reports_dir"/*.md 2>/dev/null | grep -v README)
+fi
 ```
 
 ### Step 3: Parse Plan Phases
@@ -349,7 +431,7 @@ phases=$(grep -E "^### Phase [0-9]+:" "$plan_file" 2>/dev/null)
 ## Task Review: #{N} - {slug}
 
 **Status**: {status from state.json}
-**Language**: {language}
+**Task Type**: {task_type}
 
 ### Artifacts Found
 - Plan: {path or "Not found"}
@@ -386,7 +468,7 @@ For each incomplete phase, extract:
 1. **Complete phase {P} of task {N}: {phase_name}**
    - Goal: {extracted phase goal}
    - Effort: {inherited or "TBD"}
-   - Language: {inherited from parent}
+   - Task Type: {inherited from parent}
    - Ref: Parent task #{N}
 ```
 
@@ -396,26 +478,37 @@ For each incomplete phase, extract:
 
 ### Step 7: Interactive User Selection
 
-**Present options to user**:
+**Use AskUserQuestion with multiSelect**:
+```json
+{
+  "question": "Select follow-up tasks to create:",
+  "header": "Follow-up Tasks",
+  "multiSelect": true,
+  "options": [
+    {
+      "label": "Phase 2: implement_validation_rules",
+      "description": "Goal: {phase_goal} | Effort: {effort}"
+    },
+    {
+      "label": "Phase 3: add_error_reporting",
+      "description": "Goal: {phase_goal} | Effort: {effort}"
+    }
+  ]
+}
 ```
-Found {N} incomplete phase(s) in task #{task_number}.
 
-Suggested follow-up tasks:
-  [1] Complete phase 2 of task 597: implement_validation_rules
-  [2] Complete phase 3 of task 597: add_error_reporting
-
-Options:
-  - Enter numbers to create (e.g., "1,2" or "1")
-  - "all" to create all suggested tasks
-  - "none" to skip task creation
-
-Your selection:
+**For >20 incomplete phases**, add "Select all" option:
+```json
+{
+  "label": "Select all",
+  "description": "Create tasks for all {N} incomplete phases"
+}
 ```
 
-**Parse user selection**:
-- Numbers → Create those specific tasks
-- "all" → Create all suggested tasks
-- "none" → Exit without creating tasks
+**Selection handling**:
+- Selected options → Create those specific tasks
+- Empty selection → Exit without creating tasks (no separate "none" option needed)
+- "Select all" selected → Create all suggested tasks
 
 ### Step 8: Create Selected Follow-up Tasks
 
@@ -436,16 +529,32 @@ jq --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
      "project_number": '$next_num',
      "project_name": "followup_{parent_N}_phase_{P}",
      "status": "not_started",
-     "language": "'{language}'",
+     "task_type": "'{task_type}'",
      "description": $desc,
      "parent_task": '{parent_N}',
      "created": $ts,
      "last_updated": $ts
    }] + .active_projects' \
-  specs/state.json > /tmp/state.json && \
-  mv /tmp/state.json specs/state.json
+     specs/state.json > specs/tmp/state.json && \
+     mv specs/tmp/state.json specs/state.json
 
-# Update TODO.md (add entry and update frontmatter)
+# Update TODO.md — Collect all follow-up task entries first (loop at Step 8), then use batch insertion
+
+```
+# Build batch_markdown by joining all entries with \n\n, then use a single Edit tool call:
+oldString: "## Tasks\n"
+newString: "## Tasks\n\n{batch_markdown}\n"
+```
+
+**WARNING**: DO NOT search for the last `---` separator and append text after it.
+DO NOT insert at the bottom of the file.
+DO NOT prepend each task individually — individual prepending reverses task order (last task becomes first).
+ALWAYS use the heading-anchored Edit tool pattern with `oldString: "## Tasks\n"`.
+The heading `## Tasks` is unique in TODO.md and is the only reliable insertion anchor.
+
+After inserting, re-read the first few lines after `## Tasks`:
+- Confirm the first task after ## Tasks has the expected task number
+- If it doesn't match, the insertion went wrong — fix and re-verify
 ```
 
 ### Step 9: Output Results
@@ -476,6 +585,25 @@ Review complete. No follow-up tasks created.
 - Does NOT auto-create tasks without user confirmation
 - Gracefully handles missing artifacts (plan, summary, research)
 
+### Standards Reference (--review mode)
+
+This mode implements the multi-task creation pattern. See `.opencode/docs/reference/standards/multi-task-creation-standard.md` for the complete standard.
+
+**Compliance Level**: Partial (simplified for follow-up tasks)
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| Discovery | Yes | Incomplete phases from plan file |
+| Selection | Yes | Numbered list selection |
+| Grouping | No | One task per phase |
+| Dependencies | Partial | parent_task linking only |
+| Ordering | No | Phase number is implicit order |
+| Visualization | No | Not implemented |
+| Confirmation | Yes | Explicit selection required |
+| State Updates | Yes | Standard task creation |
+
+**Note**: Topological sorting is not needed because follow-up tasks inherit natural ordering from plan phase numbers. The parent_task field provides traceability to the original task.
+
 ## Abandon Mode (--abandon)
 
 Parse task ranges:
@@ -493,22 +621,22 @@ Parse task ranges:
    fi
    ```
 
-   **Move to archive via jq** (two-step to avoid jq escaping bug):
+   **Move to archive via jq** (two-step to avoid jq escaping bug - see `jq-escaping-workarounds.md`):
    ```bash
-   # Step 1: Add to archive with abandoned status
-   jq --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --argjson task "$task_data" \
-     '.completed_projects = [$task | .status = "abandoned" | .abandoned = $ts] + .completed_projects' \
-     specs/archive/state.json > /tmp/archive.json && \
-     mv /tmp/archive.json specs/archive/state.json
+    # Step 1: Add to archive with abandoned status
+    jq --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --argjson task "$task_data" \
+      '.completed_projects = [$task | .status = "abandoned" | .abandoned = $ts] + .completed_projects' \
+      specs/archive/state.json > specs/tmp/archive.json && \
+      mv specs/tmp/archive.json specs/archive/state.json
 
-   # Step 2: Remove from active using del() instead of map(select(!=))
-   jq --arg num "$task_number" \
-     'del(.active_projects[] | select(.project_number == ($num | tonumber)))' \
-     specs/state.json > /tmp/state.json && \
-     mv /tmp/state.json specs/state.json
-   ```
+    # Step 2: Remove from active using del() instead of map(select(!=))
+    jq --arg num "$task_number" \
+      'del(.active_projects[] | select(.project_number == ($num | tonumber)))' \
+      specs/state.json > specs/tmp/state.json && \
+      mv specs/tmp/state.json specs/state.json
+    ```
 
-   **Update TODO.md**: Remove the task entry (abandoned tasks should not appear in TODO.md)
+    **Update TODO.md**: Remove the task entry (abandoned tasks should not appear in TODO.md)
 
    **Move task directory to archive** (handle both legacy unpadded and new padded formats):
    ```bash

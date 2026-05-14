@@ -1,0 +1,48 @@
+{
+  "name": "epidemiology",
+  "version": "1.0.0",
+  "description": "Epidemiology research extension for R and related tooling. Provides agents, skills, and context for statistical modeling, infectious disease dynamics (EpiModel), and Bayesian inference (epidemia/Stan).",
+  "language": "epidemiology",
+  "dependencies": [
+    "core"
+  ],
+  "provides": {
+    "agents": [
+      "epidemiology-research-agent.md",
+      "epidemiology-implementation-agent.md"
+    ],
+    "skills": [
+      "skill-epidemiology-research",
+      "skill-epidemiology-implementation"
+    ],
+    "context": [
+      "project/epidemiology"
+    ],
+    "commands": [],
+    "scripts": [],
+    "rules": []
+  },
+  "routing": {
+    "research": {
+      "epidemiology": "skill-epidemiology-research"
+    },
+    "implement": {
+      "epidemiology": "skill-epidemiology-implementation"
+    }
+  },
+  "merge_targets": {
+    "opencode_md": {
+      "source": "EXTENSION.md",
+      "target": ".opencode/AGENTS.md",
+      "section_id": "extension_oc_epidemiology"
+    },
+    "index": {
+      "source": "index-entries.json",
+      "target": ".opencode/context/index.json"
+    },
+    "settings": {
+      "source": "settings-fragment.json",
+      "target": ".opencode/settings.local.json"
+    }
+  }
+}

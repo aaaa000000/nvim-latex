@@ -1,5 +1,6 @@
 # Metadata File Return Pattern
 
+**Version**: 1.0
 **Created**: 2026-01-19
 **Purpose**: Quick reference for agent return via metadata file
 **Audience**: Agents, skill developers
@@ -11,19 +12,19 @@
 Agents write structured metadata to files instead of returning JSON to the console. This pattern:
 - Avoids console pollution
 - Enables reliable data exchange
-- Prevents Claude interpreting JSON as conversational text
+- Prevents OpenCode interpreting JSON as conversational text
 
 ---
 
 ## File Location
 
 ```
-specs/{NNN}_{SLUG}/.return-meta.json
+specs/{N}_{SLUG}/.return-meta.json
 ```
 
 Where:
 - `{N}` = Task number (unpadded)
-- `{SLUG}` = Task slug from state.json project_name
+- `{SLUG}` = Task slug from specs/state.json project_name
 
 Example: `specs/259_prove_completeness/.return-meta.json`
 
@@ -87,7 +88,7 @@ Use contextual status values based on operation:
 | Status sync | `synced` | `failed` |
 | Git commit | `committed` | `failed` |
 
-**CRITICAL**: Never use "completed" - triggers Claude stop behavior.
+**CRITICAL**: Never use "completed" - triggers OpenCode stop behavior.
 
 ---
 
@@ -95,7 +96,6 @@ Use contextual status values based on operation:
 
 ```bash
 # Ensure directory exists
-padded_num=$(printf "%03d" "$task_number")
 mkdir -p "specs/${padded_num}_${task_slug}"
 
 # Write metadata file
@@ -111,7 +111,7 @@ EOF
 Or use the Write tool:
 ```
 Write tool:
-  - Path: specs/{NNN}_{SLUG}/.return-meta.json
+  - Path: specs/{N}_{SLUG}/.return-meta.json
   - Content: Valid JSON matching schema
 ```
 

@@ -20,8 +20,9 @@ Organization:
 ----------------------------------------------------------------------------------
 AI/ASSISTANT GLOBAL KEYBINDINGS                | DESCRIPTION
 ----------------------------------------------------------------------------------
-<C-c>                                          | Toggle Claude Code (overridden in Telescope)
-<leader>aoo                                     | Toggle OpenCode interface (via which-key)
+<C-CR>                                          | Unified AI tool picker
+<leader>al                                      | AI load commands/agents picker
+<leader>as                                      | AI tool session picker
 
 ----------------------------------------------------------------------------------
 TERMINAL MODE KEYBINDINGS                      | DESCRIPTION
@@ -81,7 +82,8 @@ O                                              | Create new bullet point above
 dd                                             | Delete line and recalculate list numbers
 d (visual mode)                                | Delete selection and recalculate numbers
 <C-n>                                          | Toggle checkbox status ([ ] ↔ [x])
-<C-c>                                          | Toggle Claude Code (global binding, not autolist)
+<C-CR>                                          | Unified AI tool picker
+<leader>al                                      | AI load commands/agents picker
 --]]
 
 local M = {}
@@ -124,7 +126,12 @@ function M.setup()
     -- Check terminal type for specialized keybindings
     local bufname = vim.api.nvim_buf_get_name(0)
     local is_claude = bufname:match("claude") or bufname:match("ClaudeCode")
-    local is_opencode = vim.bo.filetype == "opencode_terminal"
+    local is_opencode = false
+    if vim.b.snacks_terminal then
+      local cmd = vim.b.snacks_terminal.cmd or vim.b.snacks_terminal.args or {}
+      local cmd_str = type(cmd) == "table" and table.concat(cmd, " ") or tostring(cmd)
+      is_opencode = cmd_str:match("opencode%s+%-%-port")
+    end
 
     -- Terminal navigation
     -- Skip escape mapping for Claude Code to allow its internal normal mode
@@ -267,28 +274,32 @@ function M.setup()
   -- AI/ASSISTANT GLOBAL KEYS --
   --------------------------------
 
-  -- Claude Code toggle (smart session management)
+  -- Unified AI tool picker (two-stage: Claude Code vs OpenCode)
   map("n", "<C-CR>", function()
-    require("neotex.plugins.ai.claude").smart_toggle()
-  end, {}, "Toggle Claude Code")
+    local picker = require("neotex.plugins.ai.shared.picker.ai-tool-picker")
+    if not picker._initialized then picker.setup() end
+    picker.smart_toggle()
+  end, {}, "Unified AI tool picker")
 
   map("i", "<C-CR>", function()
-    require("neotex.plugins.ai.claude").smart_toggle()
-  end, {}, "Toggle Claude Code")
+    local picker = require("neotex.plugins.ai.shared.picker.ai-tool-picker")
+    if not picker._initialized then picker.setup() end
+    picker.smart_toggle()
+  end, {}, "Unified AI tool picker")
 
   map("v", "<C-CR>", function()
-    require("neotex.plugins.ai.claude").smart_toggle()
-  end, {}, "Toggle Claude Code")
+    local picker = require("neotex.plugins.ai.shared.picker.ai-tool-picker")
+    if not picker._initialized then picker.setup() end
+    picker.smart_toggle()
+  end, {}, "Unified AI tool picker")
 
   map("t", "<C-CR>", function()
-    require("neotex.plugins.ai.claude").smart_toggle()
-  end, {}, "Toggle Claude Code")
+    local picker = require("neotex.plugins.ai.shared.picker.ai-tool-picker")
+    if not picker._initialized then picker.setup() end
+    picker.smart_toggle()
+  end, {}, "Unified AI tool picker")
 
-  -- OpenCode toggle
-  -- Note: This global mapping is overridden by buffer-local mappings in Telescope pickers (<C-g> closes picker)
-  map({ "n", "i" }, "<C-g>", function() require("opencode").toggle() end, {}, "Toggle Opencode")
- 
-   -- OpenCode toggle: Use <leader>aoo via which-key (preserves <C-o> for jump list)
+  -- OpenCode toggle: Use <leader>aoo via which-key (preserves <C-o> for jump list)
 
   ------------------------
   -- TEXT EDITING KEYS --

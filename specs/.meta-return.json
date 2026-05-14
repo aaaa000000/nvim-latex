@@ -1,0 +1,25 @@
+{
+  "status": "tasks_created",
+  "summary": "Created 1 task for unified AI commands loader picker: <leader>al keymap that reuses task 518's vim.ui.select pattern to choose between ClaudeCode/OpencodeCommands with last-used-first ordering.",
+  "artifacts": [
+    {
+      "type": "task_entry",
+      "path": "specs/TODO.md",
+      "summary": "Task #519 added to TODO.md"
+    },
+    {
+      "type": "task_directory",
+      "path": "specs/519_add_leader_al_ai_commands_loader_picker/",
+      "summary": "Task directory for unified AI commands loader picker"
+    }
+  ],
+  "metadata": {
+    "session_id": "sess_1777871063_cca981",
+    "agent_type": "meta-builder-agent",
+    "delegation_depth": 2,
+    "delegation_path": ["orchestrator", "meta", "skill-meta", "meta-builder-agent"],
+    "mode": "prompt",
+    "tasks_created": 1
+  },
+  "next_steps": "Run /research 519 to begin research on the AI commands loader picker task"
+}

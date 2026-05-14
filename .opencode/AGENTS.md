@@ -1,0 +1,506 @@
+# OpenCode Agent System
+
+Task management and agent orchestration system for Neovim configuration development. This system provides structured workflows for research, planning, and implementation across multiple languages and domains.
+
+> **Port of CLAUDE.md**: This documentation was ported from the original system on 2026-05-02 to maintain parity between the two systems.
+
+## Quick Reference
+
+- **Task List**: @specs/TODO.md
+- **Machine State**: @specs/state.json
+- **Error Tracking**: @specs/errors.json
+- **Architecture**: @.opencode/README.md
+
+## Project Structure
+
+```
+.                         # Repository root
+├── specs/               # Task management artifacts
+│   ├── TODO.md         # Task list
+│   ├── state.json      # Task state
+│   └── {NNN}_{SLUG}/   # Task directories
+└── .opencode/           # OpenCode configuration
+    ├── commands/       # Slash commands
+    ├── skills/         # Skill definitions
+    ├── agent/          # Agent definitions
+    ├── rules/          # Auto-applied rules
+    └── context/        # Domain knowledge
+```
+
+## Task Management
+
+### Status Markers
+
+- `[NOT STARTED]` - Initial state
+- `[RESEARCHING]` -> `[RESEARCHED]` - Research phase
+- `[PLANNING]` -> `[PLANNED]` - Planning phase
+- `[IMPLEMENTING]` -> `[COMPLETED]` - Implementation phase
+- `[BLOCKED]`, `[ABANDONED]`, `[PARTIAL]`, `[EXPANDED]` - Terminal/exception states
+
+### Artifact Paths
+
+```
+specs/{NNN}_{SLUG}/
+├── reports/research-{NNN}.md
+├── plans/implementation-{NNN}.md
+└── summaries/implementation-summary-{DATE}.md
+```
+
+`{NNN}` = 3-digit padded number, `{DATE}` = YYYYMMDD.
+
+### Language Routing
+
+**Core Languages** (always available):
+
+| Language | Research Tools | Implementation Tools |
+|----------|----------------|---------------------|
+| `general` | WebSearch, WebFetch, Read | Read, Write, Edit, Bash |
+| `meta` | Read, Grep, Glob | Write, Edit |
+
+**Extension Languages** (available when extensions are loaded via `<leader>ao`):
+
+Extensions provide specialized routing for additional languages. See `extensions/*/manifest.json` for available extensions.
+
+## Command Reference
+
+All commands use checkpoint-based execution: GATE IN -> DELEGATE -> GATE OUT -> COMMIT.
+
+| Command | Usage | Description |
+|---------|-------|-------------|
+| `/task` | `/task "Description"` | Create task |
+| `/task` | `/task --recover N`, `--expand N`, `--sync`, `--abandon N` | Manage tasks |
+| `/research` | `/research N [focus]` | Research task, route by language |
+| `/plan` | `/plan N` | Create implementation plan |
+| `/implement` | `/implement N` | Execute plan, resume from incomplete phase |
+| `/revise` | `/revise N` | Create new plan version |
+| `/review` | `/review` | Analyze codebase |
+| `/todo` | `/todo` | Archive completed/abandoned tasks, sync metrics |
+| `/errors` | `/errors` | Analyze error patterns, create fix plans |
+| `/meta` | `/meta` | System builder for .opencode/ changes |
+| `/fix-it` | `/fix-it [PATH...]` | Scan for FIX:/NOTE:/TODO:/QUESTION: tags |
+| `/refresh` | `/refresh [--dry-run] [--force]` | Clean orphaned processes and files |
+| `/convert` | `/convert FILE --to FORMAT` | Convert document formats |
+
+## Skill-to-Agent Mapping
+
+**Core Skills** (always available):
+
+| Skill | Agent | Purpose |
+|-------|-------|---------|
+| skill-researcher | general-research-agent | General web/codebase research |
+| skill-planner | planner-agent | Implementation plan creation |
+| skill-implementer | general-implementation-agent | General file implementation |
+| skill-meta | meta-builder-agent | System building and task creation |
+| skill-status-sync | (direct execution) | Atomic status updates |
+| skill-refresh | (direct execution) | Process and file cleanup |
+| skill-git-workflow | (direct execution) | Scoped git commits |
+| skill-fix-it | (direct execution) | Scan for FIX:/NOTE:/TODO:/QUESTION: tags with topic grouping |
+| skill-todo | (direct execution) | Archive completed tasks |
+| skill-tag | (user-only) | Semantic version tagging for deployment |
+| skill-orchestrator | (direct execution) | Route commands to workflows |
+
+**Extension Skills**: When extensions are loaded via `<leader>ao`, additional skill-to-agent mappings are available.
+
+### Team Mode Skills
+
+> **Note**: Requires `OPENCODE_EXPERIMENTAL_AGENT_TEAMS=1` environment variable.
+
+Team mode uses parallel subagents for complex tasks. Approximately **5x token cost** - use only when benefits justify cost.
+
+| Skill | Usage | Agents | Purpose |
+|-------|-------|--------|---------|
+| skill-team-research | `/research N --team` | 2-4 research agents | Wave-based parallel research with synthesis |
+| skill-team-plan | `/plan N --team` | 2-3 planner agents | Diverse planning approaches with trade-offs |
+| skill-team-implement | `/implement N --team` | 3-4 implementation agents | Parallel phase execution with coordination |
+
+#### Model Enforcement Flags
+
+Override default model selection per command:
+
+| Flag | Model | Use Case |
+|------|-------|----------|
+| `--fast` / `--haiku` | Claude Haiku | Quick operations, small changes |
+| `--hard` / `--sonnet` | Claude Sonnet | Complex tasks (default) |
+| `--opus` | Claude Opus | Complex reasoning, large implementations |
+
+### Agent Reference
+
+| Agent | Purpose | Typical Tasks |
+|-------|---------|---------------|
+| general-research-agent | Web/codebase research | Documentation lookup, pattern analysis |
+| general-implementation-agent | File implementation | Code changes, refactoring |
+| planner-agent | Implementation planning | Creating phased plans |
+| meta-builder-agent | System building | .opencode/ system changes |
+| code-reviewer-agent | Code review | `/review` command analysis |
+| reviser-agent | Plan revision | `/revise` command execution |
+| spawn-agent | Task spawning | Dependency resolution, blocker research |
+
+## Rules and Conventions
+
+Core rules (auto-applied by file path):
+
+| Rule | Purpose | Auto-Applied To |
+|------|---------|-----------------|
+| [state-management.md](rules/state-management.md) | Task state patterns | `specs/**` |
+| [git-workflow.md](rules/git-workflow.md) | Commit conventions | All files |
+| [error-handling.md](rules/error-handling.md) | Error recovery | `.opencode/**` |
+| [artifact-formats.md](rules/artifact-formats.md) | Report/plan formats | `specs/**` |
+| [workflows.md](rules/workflows.md) | Command lifecycle | `.opencode/**` |
+
+## Context Architecture
+
+The system uses a 5-layer context model for organizing information:
+
+| Layer | Location | Purpose | Examples |
+|-------|----------|---------|----------|
+| Agent Context | `.opencode/agent/` | Agent definitions and metadata | Agent tool descriptions, execution flows |
+| Extensions | `.opencode/context/extensions/` | Domain-specific knowledge | nix-extension.md, memory-extension.md |
+| Project Context | `.opencode/context/projects/{name}/` | Project-specific documentation | TODO.md, state.json patterns |
+| Project Memory | `.opencode/memory/` | Learned patterns and insights | Pattern classification, task history |
+| Auto-Memory | `.opencode/memory/auto/` | Automatically captured memories | Execution patterns, success indicators |
+
+### Where to Store New Content
+
+```
+New agent or skill definition? → .opencode/agent/ or .opencode/skills/
+Domain-specific conventions?   → .opencode/context/extensions/{extension}-extension.md
+Project-specific patterns?     → .opencode/context/projects/{project}/
+Learned from execution?        → .opencode/memory/
+Reusable for similar projects? → .opencode/context/ (shared contexts)
+```
+
+See @.opencode/context/architecture/context-layers.md for detailed layer documentation.
+
+### Context Imports
+
+Core context files available via @-references:
+
+| File | Purpose |
+|------|---------|
+| @specs/TODO.md | Task list and priorities |
+| @specs/state.json | Machine-readable task state |
+| @specs/errors.json | Error tracking and patterns |
+| @.opencode/README.md | System architecture overview |
+
+Extensions load additional contexts via `<leader>ao` extension picker. Each extension provides specialized domain knowledge through context files in `.opencode/context/extensions/`.
+
+## Multi-Task Creation Standards
+
+Commands that create multiple related tasks must follow the 8-component pattern for consistency and traceability.
+
+### 8-Component Structure
+
+Each multi-task operation must include:
+
+1. **Parent Task Context** - Reference to originating task/intent
+2. **Task Numbering** - Sequential 3-digit task numbers from next_project_number
+3. **Dependency Tracking** - explicit `depends_on` relationships
+4. **Status Initialization** - `[NOT STARTED]` for all new tasks
+5. **Language Routing** - Appropriate language for task type
+6. **Compliant Descriptions** - Action-oriented, specific descriptions
+7. **Category/Topic Tagging** - For grouping and filtering
+8. **Atomic TODO.md Updates** - All tasks written in single TODO.md append
+
+### Command Compliance
+
+| Command | Creates Multiple Tasks | Compliance Level |
+|---------|------------------------|------------------|
+| `/meta` | Yes (system components) | Full - all 8 components required |
+| `/fix-it` | Often (tag groups) | Full - topics become task categories |
+| `/review` | Sometimes (architectural fixes) | Full - linked to review context |
+| `/errors` | Often (pattern-based fixes) | Full - error references preserved |
+| `/task --review` | Yes (task breakdown) | Full - dependency chain maintained |
+
+### Required vs Optional Components
+
+**Always Required** (all creators):
+- Task numbers, status, descriptions
+
+**Required for 3+ tasks**:
+- Dependency tracking, category tagging
+- Parent task context in descriptions
+
+See @.opencode/context/standards/multi-task-operations.md for detailed compliance criteria.
+
+## State Synchronization
+
+TODO.md and state.json must stay synchronized. Update state.json first (machine state), then TODO.md (user-facing).
+
+**state.json structure**:
+```json
+{
+  "next_project_number": 1,
+  "active_projects": [{
+    "project_number": 1,
+    "project_name": "task_slug",
+    "status": "planned",
+    "language": "neovim"
+  }],
+  "repository_health": {
+    "last_assessed": "ISO8601 timestamp",
+    "status": "healthy"
+  }
+}
+```
+
+## Error Handling
+
+- **On failure**: Keep task in current status, log to errors.json, preserve partial progress
+- **On timeout**: Mark phase [PARTIAL], next /implement resumes
+- **Git failures**: Non-blocking (logged, not fatal)
+
+## Git Commit Conventions
+
+Format: `task {N}: {action}` with session ID in body.
+
+```
+task 1: complete research
+
+Session: sess_1736700000_abc123
+```
+
+Standard actions: `create`, `complete research`, `create implementation plan`, `phase {P}: {name}`, `complete implementation`.
+
+## jq Command Safety
+
+OpenCode Issue #1132 causes jq parse errors when using `!=` operator in certain contexts.
+
+### Safe Pattern
+
+Use `select(.type == "X" | not)` to exclude items:
+
+```bash
+# SAFE: Filter out completed tasks
+cat specs/state.json | jq '.active_projects[] | select(.status == "completed" | not)'
+
+# SAFE: Find non-meta tasks
+cat specs/state.json | jq '.active_projects[] | select(.language == "meta" | not)'
+```
+
+### Unsafe Pattern (Avoid)
+
+```bash
+# UNSAFE: May cause parse errors (Issue #1132)
+cat specs/state.json | jq '.active_projects[] | select(.status != "completed")'
+
+# UNSAFE: Avoid != operator in jq filters
+cat specs/state.json | jq '.active_projects[] | select(.language != "meta")'
+```
+
+### Workarounds
+
+For complex filtering, use intermediate variables or pipeline the negation:
+
+```bash
+# Alternative: Filter in two steps
+cat specs/state.json | jq '.active_projects[]' | jq 'select(.status == "completed" | not)'
+```
+
+See @.opencode/context/technical/jq-escaping-workarounds.md for additional patterns.
+
+## Syncprotect
+
+The `.syncprotect` file at project root prevents specific files from being modified during automated synchronization operations.
+
+### Location
+
+```
+{project_root}/.syncprotect
+```
+
+### Protection Rules
+
+Each line in `.syncprotect` specifies a pattern:
+
+- **Comments**: Lines starting with `#` are ignored
+- **Blank lines**: Ignored
+- **Relative paths**: Relative to project root (e.g., `README.md`, `docs/`)
+- **Patterns**: Gitignore-style patterns supported
+
+### Example .syncprotect
+
+```
+# Never auto-modify these files
+README.md
+LICENSE
+CHANGELOG.md
+
+# Protect documentation
+docs/architecture.md
+docs/api/
+
+# Protect generated files
+*.gen.ts
+_generated/
+```
+
+### Visual Indicator
+
+Files protected by `.syncprotect` show a shield icon in the `<leader>sp` (picker) preview, indicating they won't be affected by bulk operations.
+
+### Use Cases
+
+- Protect hand-written documentation from auto-generation
+- Prevent modification of legal/license files
+- Exclude generated code from sync operations
+- Mark stable API definitions
+
+## Memory Extension
+
+Knowledge capture and retrieval via the memory vault. Supports text, file, directory, and task-based memory creation with MCP-backed search and deduplication.
+
+### Skill-Agent Mapping
+
+| Skill | Agent | Purpose |
+|-------|-------|---------|
+| skill-memory | (direct execution) | Memory creation, distillation, and management |
+
+### Commands
+
+| Command | Usage | Description |
+|---------|-------|-------------|
+| `/learn` | `/learn "text"` | Add text as memory |
+| `/learn` | `/learn /path/to/file` | Add file content as memory |
+| `/learn` | `/learn /path/to/dir/` | Scan directory for learnable content |
+| `/learn` | `/learn --task N` | Review task artifacts and create memories |
+| `/distill` | `/distill` | Generate memory vault health report |
+| `/distill` | `/distill --purge` | Remove stale memories (interactive) |
+| `/distill` | `/distill --merge` | Combine duplicate memories |
+| `/distill` | `/distill --compress` | Summarize oversized memories |
+| `/distill` | `/distill --refine` | Improve memory metadata quality |
+| `/distill` | `/distill --gc` | Hard-delete tombstoned memories |
+| `/distill` | `/distill --auto` | Automated Tier 1 maintenance |
+
+### Memory-Augmented Research
+
+Memory retrieval is automatic: when the memory extension is loaded, `/research`, `/plan`, and `/implement` preflight stages retrieve relevant memories and inject them as context. The `--clean` flag suppresses auto-retrieval.
+
+### Memory Lifecycle
+
+```
+/learn -> create memories -> auto-retrieval in /research, /plan, /implement
+                          -> /todo harvests memory candidates from completed tasks
+                          -> /distill scores, reports, and maintains the vault
+```
+
+### Validate-on-Read
+
+There is no `--reindex` command. The memory system uses validate-on-read: before any scoring or retrieval operation, the memory index is compared against the filesystem. If stale, the index is automatically regenerated.
+
+## Nix Extension
+
+NixOS and Home Manager configuration support with MCP-NixOS integration.
+
+### Language Routing
+
+| Language | Research Tools | Implementation Tools |
+|----------|----------------|---------------------|
+| `nix` | MCP-NixOS, WebSearch, WebFetch, Read | Read, Write, Edit, Bash |
+
+### Skill-Agent Mapping
+
+| Skill | Agent | Purpose |
+|-------|-------|---------|
+| skill-nix-research | nix-research-agent | NixOS/Home Manager/flakes research |
+| skill-nix-implementation | nix-implementation-agent | Nix configuration implementation |
+
+### Key Technologies
+
+- **NixOS**: Declarative Linux distribution with reproducible system configurations
+- **Home Manager**: User-level declarative configuration management
+- **Nix Flakes**: Reproducible, hermetic package management with lockfiles
+- **MCP-NixOS**: Model Context Protocol server for package/option search
+
+### Build Verification
+
+```bash
+# Check flake syntax and evaluate outputs
+nix flake check
+
+# Show flake outputs
+nix flake show
+
+# Build NixOS configuration
+nixos-rebuild build --flake .#hostname
+
+# Build Home Manager configuration
+home-manager build --flake .#user
+```
+
+### MCP-NixOS Integration
+
+Available MCP tools when configured:
+
+```bash
+mcp__nixos__nix(action="search", query="pkgname", source="nixpkgs")
+mcp__nixos__nix(action="options", query="services.X", source="nixos-options")
+mcp__nixos__nix_versions(package="nodejs")
+```
+
+Agents gracefully degrade to WebSearch and CLI commands when MCP is unavailable.
+
+## Neovim Extension
+
+Neovim configuration development support with specialized Lua patterns.
+
+### Language Routing
+
+| Language | Research Skill | Implementation Skill | Tools |
+|----------|----------------|---------------------|-------|
+| `neovim` | `skill-neovim-research` | `skill-neovim-implementation` | WebSearch, WebFetch, Read, Bash |
+
+### Skill-Agent Mapping
+
+| Skill | Agent | Purpose |
+|-------|-------|---------|
+| skill-neovim-research | neovim-research-agent | Neovim/plugin research |
+| skill-neovim-implementation | neovim-implementation-agent | Neovim configuration implementation |
+
+### Rules
+
+- neovim-lua.md - Neovim Lua development patterns
+
+### Neovim Patterns
+
+- Use `vim.keymap.set` with description for all keymaps
+- Use `vim.opt` over `vim.o` for options
+- Always use augroups with `clear = true` for autocommands
+- Use `pcall` for optional module loading
+
+### Common Operations
+
+| Operation | Pattern |
+|-----------|---------|
+| Keymaps | `vim.keymap.set("n", "<leader>x", fn, { desc = "Description" })` |
+| Options | `vim.opt.number = true` |
+| Autocommands | `vim.api.nvim_create_augroup("Name", { clear = true })` |
+| Plugin specs | lazy.nvim table format with event/cmd/ft/keys triggers |
+
+### Context Imports
+
+Domain knowledge files (load as needed):
+
+| File | Purpose |
+|------|---------|
+| @.opencode/context/project/neovim/domain/neovim-api.md | Neovim Lua API reference |
+| @.opencode/context/project/neovim/patterns/plugin-spec.md | Plugin specification patterns |
+| @.opencode/context/project/neovim/tools/lazy-nvim-guide.md | lazy.nvim configuration guide |
+
+## Command Migration Notes
+
+### `/fix` renamed to `/fix-it`
+
+The `/fix` command has been renamed to `/fix-it` to align with the OpenCode agent system naming convention. The new command includes:
+- Support for `QUESTION:` tags (research tasks)
+- Topic grouping for TODO and QUESTION items
+- Dependency handling between learn-it and fix-it tasks
+- Content-based language detection for research tasks
+
+**Update your workflows**: Replace all occurrences of `/fix` with `/fix-it` in scripts and documentation.
+
+## Important Notes
+
+- Update status BEFORE starting work (preflight) and AFTER completing (postflight)
+- state.json = machine truth, TODO.md = user visibility
+- All skills use lazy context loading via @-references
+- Session ID format: `sess_{timestamp}_{random}` - generated at GATE IN, included in commits

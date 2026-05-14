@@ -1,6 +1,8 @@
 # Agent Templates for System Generation
 
 **Purpose**: Standard templates for different agent types
+
+**Version**: 1.0  
 **Last Updated**: 2025-12-29
 
 ---
@@ -311,7 +313,7 @@ All templates follow the 8-stage workflow pattern:
 
 ### Stage 7: Postflight (Critical)
 - Validate all artifacts created
-- Update TODO.md and state.json (via status-sync-manager)
+- Update specs/TODO.md and specs/state.json (via status-sync-manager)
 - Create git commit (via git-workflow-manager)
 - Log errors to errors.json
 
@@ -331,4 +333,4 @@ All templates follow the 8-stage workflow pattern:
 
 ---
 
-**Maintained By**: ProofChecker Development Team
+**Maintained By**: Logos/Theory Development Team

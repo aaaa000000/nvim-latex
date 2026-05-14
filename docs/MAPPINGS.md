@@ -121,16 +121,15 @@ All leader-based mappings use `<Space>` as the leader key and are organized into
 
 | Key | Mode | Description |
 |-----|------|-------------|
-| `<C-c>` | All | Toggle Claude Code sidebar |
-| `<leader>ac` | Normal | Browse Claude commands hierarchy |
-| `<leader>ac` | Visual | Send selection to Claude with custom prompt |
+| `<C-CR>` | All | Unified AI tool picker |
+| `<leader>al` | Normal | AI commands/agent loader picker |
+| `<leader>al` | Visual | Send selection with prompt |
 | `<leader>as` | Normal | Browse Claude sessions |
 | `<leader>at` | Normal | Toggle TTS notifications (project-specific) |
 | `<leader>av` | Normal | View git worktrees |
 | `<leader>aw` | Normal | Create new worktree with Claude session |
 | `<leader>ar` | Normal | Restore closed worktree session |
 | `<leader>ak` | Normal | Kill stale sessions |
-| `<leader>ao` | Normal | Open session |
 | `<leader>aH` | Normal | Health check |
 
 See [Claude Code documentation](../lua/neotex/plugins/ai/claude/README.md) for complete feature details.
@@ -140,7 +139,6 @@ See [Claude Code documentation](../lua/neotex/plugins/ai/claude/README.md) for c
 | Key | Action | Description | Availability |
 |-----|--------|-------------|--------------|
 | `<leader>aX` | MCP Hub | Open MCP Hub interface | All files |
-| `<leader>al` | Lectic run | Run Lectic AI | `.lec`/`.md` files |
 | `<leader>an` | New Lectic file | Create Lectic file | `.lec`/`.md` files |
 
 ### FIND (`<leader>f`)

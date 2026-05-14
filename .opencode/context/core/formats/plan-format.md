@@ -7,7 +7,7 @@
 - Do **not** use YAML front matter. Use a Markdown metadata block at the top of the plan.
 - Required fields: Task, Status, Effort, Dependencies, Research Inputs, Artifacts, Standards, Type.
 - Status timestamps belong where transitions happen (e.g., in phases or a short Started/Completed line under the status). Avoid null placeholder fields.
-- Standards must reference this file plus status-markers.md, artifact-management.md, and tasks.md.
+- Standards must reference this file plus status-markers.md, documentation-standards.md, and task-management.md.
 
 ### Example Metadata Block
 ```
@@ -19,10 +19,10 @@
 - **Research Inputs**: None
 - **Artifacts**: plans/implementation-001.md
 - **Standards**:
-  - .opencode/context/core/standards/plan.md
+  - .opencode/context/core/formats/plan-format.md
   - .opencode/context/core/standards/status-markers.md
-  - .opencode/context/core/system/artifact-management.md
-  - .opencode/context/core/standards/tasks.md
+  - .opencode/context/core/standards/documentation-standards.md
+  - .opencode/context/core/standards/task-management.md
 - **Type**: markdown
 ```
 
@@ -101,7 +101,7 @@ Plans may include a `plan_metadata` object in state.json tracking plan character
 - **Dependencies**: None
 - **Research Inputs**: None
 - **Artifacts**: plans/implementation-001.md (this file)
-- **Standards**: plan.md; status-markers.md; artifact-management.md; tasks.md
+- **Standards**: plan-format.md; status-markers.md; documentation-standards.md; task-management.md
 - **Type**: markdown
 
 ## Overview

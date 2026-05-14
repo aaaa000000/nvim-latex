@@ -1,0 +1,13 @@
+{
+  "phase": 2,
+  "phase_name": "Update Primary Format Spec and Agent Definition",
+  "started_at": "2026-05-05T12:05:00Z",
+  "last_updated": "2026-05-05T12:05:00Z",
+  "objectives": [
+    {"id": 1, "description": "Update handoff-artifact.md template, examples, and Where section", "status": "in_progress"},
+    {"id": 2, "description": "Update general-implementation-agent.md Stage 4C and Stage 7 examples", "status": "not_started"}
+  ],
+  "current_objective": 1,
+  "approaches_tried": [],
+  "handoff_count": 0
+}

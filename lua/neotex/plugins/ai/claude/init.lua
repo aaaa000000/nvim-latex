@@ -148,7 +148,7 @@ M.setup = function(opts)
     nargs = 0,
   })
 
-  -- Set up a timer to periodically sync state
+-- Set up a timer to periodically sync state
   vim.defer_fn(function()
     local timer = vim.loop.new_timer()
     timer:start(1000, 1000, vim.schedule_wrap(function()

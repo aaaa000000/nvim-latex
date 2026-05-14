@@ -1,0 +1,139 @@
+{
+  "name": "founder",
+  "version": "3.0.0",
+  "description": "Strategic business analysis for founders with task integration: market sizing, competitive analysis, go-to-market strategy, contract review, and project timeline management",
+  "language": "founder",
+  "dependencies": [
+    "core",
+    "slidev"
+  ],
+  "provides": {
+    "agents": [
+      "market-agent.md",
+      "analyze-agent.md",
+      "strategy-agent.md",
+      "founder-plan-agent.md",
+      "founder-implement-agent.md",
+      "legal-council-agent.md",
+      "project-agent.md",
+      "founder-spreadsheet-agent.md",
+      "finance-agent.md",
+      "deck-research-agent.md",
+      "deck-planner-agent.md",
+      "deck-builder-agent.md",
+      "financial-analysis-agent.md",
+      "meeting-agent.md",
+      "legal-analysis-agent.md"
+    ],
+    "skills": [
+      "skill-market",
+      "skill-analyze",
+      "skill-strategy",
+      "skill-founder-plan",
+      "skill-founder-implement",
+      "skill-legal",
+      "skill-project",
+      "skill-founder-spreadsheet",
+      "skill-finance",
+      "skill-deck-research",
+      "skill-deck-plan",
+      "skill-deck-implement",
+      "skill-financial-analysis",
+      "skill-meeting",
+      "skill-consult"
+    ],
+    "commands": [
+      "market.md",
+      "analyze.md",
+      "strategy.md",
+      "legal.md",
+      "project.md",
+      "sheet.md",
+      "finance.md",
+      "deck.md",
+      "meeting.md",
+      "consult.md"
+    ],
+    "rules": [],
+    "context": [
+      "project/founder"
+    ],
+    "scripts": [],
+    "hooks": []
+  },
+  "routing": {
+    "research": {
+      "founder": "skill-market",
+      "founder:market": "skill-market",
+      "founder:analyze": "skill-analyze",
+      "founder:strategy": "skill-strategy",
+      "founder:legal": "skill-legal",
+      "founder:project": "skill-project",
+      "founder:sheet": "skill-founder-spreadsheet",
+      "founder:finance": "skill-finance",
+      "founder:financial-analysis": "skill-financial-analysis",
+      "founder:deck": "skill-deck-research",
+      "founder:meeting": "skill-meeting",
+      "founder:consult": "skill-consult"
+    },
+    "plan": {
+      "founder": "skill-founder-plan",
+      "founder:market": "skill-founder-plan",
+      "founder:analyze": "skill-founder-plan",
+      "founder:strategy": "skill-founder-plan",
+      "founder:legal": "skill-founder-plan",
+      "founder:project": "skill-founder-plan",
+      "founder:sheet": "skill-founder-plan",
+      "founder:finance": "skill-founder-plan",
+      "founder:financial-analysis": "skill-founder-plan",
+      "founder:deck": "skill-deck-plan",
+      "founder:meeting": "skill-founder-plan",
+      "founder:consult": "skill-founder-plan"
+    },
+    "implement": {
+      "founder": "skill-founder-implement",
+      "founder:market": "skill-founder-implement",
+      "founder:analyze": "skill-founder-implement",
+      "founder:strategy": "skill-founder-implement",
+      "founder:legal": "skill-founder-implement",
+      "founder:project": "skill-founder-implement",
+      "founder:sheet": "skill-founder-implement",
+      "founder:finance": "skill-founder-implement",
+      "founder:financial-analysis": "skill-founder-implement",
+      "founder:deck": "skill-deck-implement",
+      "founder:meeting": "skill-founder-implement",
+      "founder:consult": "skill-founder-implement"
+    }
+  },
+  "merge_targets": {
+    "opencode_md": {
+      "source": "EXTENSION.md",
+      "target": ".opencode/AGENTS.md",
+      "section_id": "extension_oc_founder"
+    },
+    "index": {
+      "source": "index-entries.json",
+      "target": ".opencode/context/index.json"
+    }
+  },
+  "mcp_servers": {
+    "sec-edgar": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@stefanoamorelli/sec-edgar-mcp"
+      ],
+      "env": {}
+    },
+    "firecrawl": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "firecrawl-mcp"
+      ],
+      "env": {
+        "FIRECRAWL_API_KEY": "${FIRECRAWL_API_KEY}"
+      }
+    }
+  }
+}

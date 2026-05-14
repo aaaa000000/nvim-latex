@@ -1,0 +1,32 @@
+{
+  "agent": {
+    "python-research": {
+      "description": "Research Python development topics and libraries",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/python-research-agent.md}",
+      "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "glob": true,
+        "grep": true,
+        "bash": true,
+        "webfetch": true,
+        "websearch": true
+      }
+    },
+    "python-implementation": {
+      "description": "Implement Python code and applications",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/python-implementation-agent.md}",
+      "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "glob": true,
+        "grep": true,
+        "bash": true
+      }
+    }
+  }
+}

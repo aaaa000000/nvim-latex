@@ -9,7 +9,7 @@ This document provides patterns for reading and writing metadata files between a
 ### Metadata File Location
 
 ```
-specs/{NNN}_{SLUG}/.return-meta.json
+specs/{N}_{SLUG}/.return-meta.json
 ```
 
 Where:
@@ -19,12 +19,11 @@ Where:
 ### Deriving the Path
 
 ```bash
-# Given task_number and task data from state.json
+# Given task_number and task data from specs/state.json
 task_number=259
 task_slug=$(jq -r --argjson num "$task_number" \
   '.active_projects[] | select(.project_number == $num) | .project_name' \
   specs/state.json)
-padded_num=$(printf "%03d" "$task_number")
 
 metadata_path="specs/${padded_num}_${task_slug}/.return-meta.json"
 ```
@@ -37,7 +36,6 @@ For simple metadata without complex escaping:
 
 ```bash
 # Ensure directory exists
-padded_num=$(printf "%03d" "$task_number")
 mkdir -p "specs/${padded_num}_${task_slug}"
 
 # Write metadata using heredoc
@@ -73,7 +71,7 @@ When you need to interpolate variables (uses Task 599 jq escaping workarounds):
 jq -n \
   --arg status "researched" \
   --arg next "Run /plan ${task_number} to create implementation plan" \
-  '{status: $status, next_steps: $next}' > /tmp/meta_base.json
+  '{status: $status, next_steps: $next}' > specs/tmp/meta_base.json
 
 # Step 2: Add artifacts array
 jq \
@@ -81,7 +79,7 @@ jq \
   --arg type "report" \
   --arg summary "${artifact_summary}" \
   '. + {artifacts: [{type: $type, path: $path, summary: $summary}]}' \
-  /tmp/meta_base.json > /tmp/meta_with_artifacts.json
+  specs/tmp/meta_base.json > specs/tmp/meta_with_artifacts.json
 
 # Step 3: Add metadata object
 jq \
@@ -89,19 +87,19 @@ jq \
   --arg agent "lean-research-agent" \
   --argjson depth 1 \
   '. + {metadata: {session_id: $sid, agent_type: $agent, delegation_depth: $depth}}' \
-  /tmp/meta_with_artifacts.json > "specs/${padded_num}_${task_slug}/.return-meta.json"
+  specs/tmp/meta_with_artifacts.json > "specs/${padded_num}_${task_slug}/.return-meta.json"
 
 # Cleanup temp files
-rm -f /tmp/meta_base.json /tmp/meta_with_artifacts.json
+rm -f specs/tmp/meta_base.json specs/tmp/meta_with_artifacts.json
 ```
 
-### Pattern 3: Claude Write Tool
+### Pattern 3: OpenCode Write Tool
 
-For agents using Claude tools directly:
+For agents using OpenCode tools directly:
 
 ```
 Use the Write tool to create the metadata file:
-- Path: specs/{NNN}_{SLUG}/.return-meta.json
+- Path: specs/{N}_{SLUG}/.return-meta.json
 - Content: Valid JSON matching the schema
 ```
 
@@ -253,15 +251,15 @@ if [ -f "$metadata_file" ] && jq empty "$metadata_file" 2>/dev/null; then
     session_id=$(jq -r '.metadata.session_id // ""' "$metadata_file")
 
     if [ "$status" = "researched" ] || [ "$status" = "planned" ] || [ "$status" = "implemented" ]; then
-        # Update state.json
+        # Update specs/state.json
         jq --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
            --arg status "$status" \
           '(.active_projects[] | select(.project_number == '$task_number')) |= . + {
             status: $status,
             last_updated: $ts
-          }' specs/state.json > /tmp/state.json && mv /tmp/state.json specs/state.json
+          }' specs/state.json > specs/tmp/state.json && mv specs/tmp/state.json specs/state.json
 
-        # Add artifact to state.json (if present)
+        # Add artifact to specs/state.json (if present)
         if [ -n "$artifact_path" ]; then
             jq --arg path "$artifact_path" \
                --arg type "$(jq -r '.artifacts[0].type' "$metadata_file")" \
@@ -269,7 +267,7 @@ if [ -f "$metadata_file" ] && jq empty "$metadata_file" 2>/dev/null; then
               '(.active_projects[] | select(.project_number == '$task_number')).artifacts =
                 ([(.active_projects[] | select(.project_number == '$task_number')).artifacts // [] | .[] ] +
                  [{"path": $path, "type": $type, "summary": $summary}])' \
-              specs/state.json > /tmp/state.json && mv /tmp/state.json specs/state.json
+              specs/state.json > specs/tmp/state.json && mv specs/tmp/state.json specs/state.json
         fi
 
         # Git commit
@@ -278,12 +276,11 @@ if [ -f "$metadata_file" ] && jq empty "$metadata_file" 2>/dev/null; then
 
 Session: ${session_id}
 
-Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 
         # Cleanup
         rm -f "$metadata_file"
-        rm -f "specs/${padded_num}_${task_slug}/.postflight-pending"
-        rm -f "specs/${padded_num}_${task_slug}/.postflight-loop-guard"
+        rm -f specs/.postflight-pending
+        rm -f specs/.postflight-loop-guard
 
         echo "Postflight complete: $status"
     else

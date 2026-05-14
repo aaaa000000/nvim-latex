@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "obsidian-memory": {
+      "command": "npx",
+      "args": ["-y", "@dsebastien/obsidian-cli-rest-mcp@latest"],
+      "env": {
+        "OBSIDIAN_API_KEY": "${OBSIDIAN_API_KEY}",
+        "OBSIDIAN_PORT": "27124"
+      }
+    }
+  }
+}

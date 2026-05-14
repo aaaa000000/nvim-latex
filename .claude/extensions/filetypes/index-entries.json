@@ -1,0 +1,224 @@
+{
+  "entries": [
+    {
+      "path": "project/filetypes/tools/tool-detection.md",
+      "description": "Shared tool detection patterns for all filetypes agents",
+      "line_count": 180,
+      "load_when": {
+        "agents": [
+          "filetypes-router-agent",
+          "document-agent",
+          "filetypes-spreadsheet-agent",
+          "presentation-agent",
+          "scrape-agent",
+          "docx-edit-agent",
+          "sheet-agent"
+        ],
+        "languages": [],
+        "commands": [
+          "/convert",
+          "/table",
+          "/edit",
+          "/sheet"
+        ]
+      },
+      "domain": "project",
+      "subdomain": "filetypes",
+      "summary": "Shared tool detection patterns for all filetypes agents"
+    },
+    {
+      "path": "project/filetypes/tools/dependency-guide.md",
+      "description": "Platform-specific installation instructions for conversion tools",
+      "line_count": 120,
+      "load_when": {
+        "agents": [
+          "filetypes-router-agent",
+          "document-agent",
+          "filetypes-spreadsheet-agent",
+          "presentation-agent",
+          "scrape-agent",
+          "docx-edit-agent",
+          "sheet-agent"
+        ],
+        "languages": [],
+        "commands": [
+          "/convert",
+          "/table",
+          "/edit",
+          "/sheet"
+        ]
+      },
+      "domain": "project",
+      "subdomain": "filetypes",
+      "summary": "Platform-specific installation instructions for conversion tools"
+    },
+    {
+      "path": "project/filetypes/tools/mcp-integration.md",
+      "description": "MCP server integration patterns for format conversion",
+      "line_count": 80,
+      "load_when": {
+        "agents": [
+          "filetypes-router-agent",
+          "document-agent"
+        ],
+        "languages": [],
+        "commands": [
+          "/convert"
+        ]
+      },
+      "domain": "project",
+      "subdomain": "filetypes",
+      "summary": "MCP server integration patterns for format conversion"
+    },
+    {
+      "path": "project/filetypes/patterns/spreadsheet-tables.md",
+      "description": "Spreadsheet to LaTeX/Typst table conversion patterns",
+      "line_count": 150,
+      "load_when": {
+        "agents": [
+          "filetypes-spreadsheet-agent"
+        ],
+        "languages": [],
+        "commands": [
+          "/table"
+        ]
+      },
+      "domain": "project",
+      "subdomain": "filetypes",
+      "summary": "Spreadsheet to LaTeX/Typst table conversion patterns"
+    },
+    {
+      "path": "project/filetypes/patterns/presentation-slides.md",
+      "description": "Presentation extraction and slide generation patterns",
+      "line_count": 180,
+      "load_when": {
+        "agents": [
+          "presentation-agent"
+        ],
+        "languages": [],
+        "commands": [
+          "/convert"
+        ]
+      },
+      "domain": "project",
+      "subdomain": "filetypes",
+      "summary": "Presentation extraction and slide generation patterns"
+    },
+    {
+      "path": "project/filetypes/patterns/pitch-deck-structure.md",
+      "description": "Pitch deck structure and 10-slide framework for investor presentations",
+      "line_count": 408,
+      "load_when": {
+        "agents": [
+          "presentation-agent",
+          "deck-research-agent",
+          "deck-planner-agent",
+          "deck-builder-agent"
+        ],
+        "languages": [
+          "deck"
+        ],
+        "commands": [
+          "/convert",
+          "/deck"
+        ]
+      },
+      "domain": "project",
+      "subdomain": "filetypes",
+      "summary": "Pitch deck structure and 10-slide framework for investor presentations"
+    },
+    {
+      "path": "project/filetypes/patterns/touying-pitch-deck-template.md",
+      "description": "Touying typst template for pitch deck slide generation",
+      "line_count": 423,
+      "load_when": {
+        "agents": [
+          "presentation-agent",
+          "deck-research-agent",
+          "deck-planner-agent",
+          "deck-builder-agent"
+        ],
+        "languages": [
+          "deck"
+        ],
+        "commands": [
+          "/convert",
+          "/deck"
+        ]
+      },
+      "domain": "project",
+      "subdomain": "filetypes",
+      "summary": "Touying typst template for pitch deck slide generation"
+    },
+    {
+      "path": "project/filetypes/domain/conversion-tables.md",
+      "description": "Format conversion support matrices, usage examples, prerequisites, dependency summary",
+      "line_count": 117,
+      "load_when": {
+        "agents": [
+          "filetypes-router-agent",
+          "document-agent",
+          "filetypes-spreadsheet-agent",
+          "presentation-agent",
+          "scrape-agent"
+        ],
+        "languages": [],
+        "commands": [
+          "/convert",
+          "/table",
+          "/scrape"
+        ]
+      },
+      "domain": "project",
+      "subdomain": "filetypes",
+      "summary": "Format conversion support matrices, usage examples, prerequisites, dependency summary"
+    },
+    {
+      "path": "project/filetypes/README.md",
+      "description": "Filetypes extension overview and navigation",
+      "line_count": 60,
+      "load_when": {
+        "agents": [],
+        "languages": [],
+        "commands": []
+      },
+      "domain": "project",
+      "subdomain": "filetypes",
+      "summary": "Filetypes extension overview and navigation"
+    },
+    {
+      "path": "project/filetypes/tools/superdoc-integration.md",
+      "description": "SuperDoc MCP server configuration and tool inventory for DOCX editing",
+      "line_count": 120,
+      "load_when": {
+        "agents": [
+          "docx-edit-agent"
+        ],
+        "languages": [],
+        "commands": [
+          "/edit"
+        ]
+      },
+      "domain": "project",
+      "subdomain": "filetypes",
+      "summary": "SuperDoc MCP server configuration and tool inventory for DOCX editing"
+    },
+    {
+      "path": "project/filetypes/patterns/office-edit-patterns.md",
+      "description": "Office document editing patterns: Word AppleScript integration, tracked changes, batch editing",
+      "line_count": 150,
+      "load_when": {
+        "agents": [
+          "docx-edit-agent"
+        ],
+        "languages": [],
+        "commands": [
+          "/edit"
+        ]
+      },
+      "domain": "project",
+      "subdomain": "filetypes",
+      "summary": "Office document editing patterns: Word AppleScript integration, tracked changes, batch editing"
+    }
+  ]
+}

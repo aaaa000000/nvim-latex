@@ -16,8 +16,8 @@ Roadmap updates occur during `/review` at Step 2.5 (Roadmap Integration). No fla
 
 | Source | Query |
 |--------|-------|
-| TODO.md | Grep `[COMPLETED]` |
-| state.json | Filter `status == "completed"` |
+| specs/TODO.md | Grep `[COMPLETED]` |
+| specs/state.json | Filter `status == "completed"` |
 | File system | Glob for mentioned paths |
 | Lean files | Grep `sorry` in Logos/ |
 
@@ -97,4 +97,4 @@ Prompt user with numbered list. Accept: numbers (e.g., "1,3"), "all", or "none".
 
 ## Related
 
-- @.opencode/context/core/formats/roadmap-format.md - ROAD_MAP.md structure
+- @.opencode/context/core/formats/roadmap-format.md - ROADMAP.md structure

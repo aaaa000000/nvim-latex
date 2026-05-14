@@ -103,9 +103,57 @@ local function run_bibexport()
   local output_bib = filename .. '.bib'
   local aux_file = 'build/' .. filename .. '.aux'
 
-  -- Build the command to run in terminal
-  local cmd = string.format('cd "%s" && bibexport -o "%s" "%s"', filedir, output_bib, aux_file)
-  vim.cmd('terminal ' .. cmd)
+  local notify = require('neotex.util.notifications')
+
+  -- Pre-check: .aux file must exist
+  local aux_path = filedir .. '/' .. aux_file
+  if vim.fn.filereadable(aux_path) == 0 then
+    notify.editor('Bibexport failed: ' .. aux_file .. ' not found', notify.categories.ERROR, { file = filename })
+    return
+  end
+
+  -- Build command and run asynchronously via jobstart
+  local cmd = string.format('bibexport -o "%s" "%s"', output_bib, aux_file)
+  local stderr_lines = {}
+
+  vim.fn.jobstart(cmd, {
+    cwd = filedir,
+    on_stderr = function(_, data, _)
+      if data then
+        for _, line in ipairs(data) do
+          if line and line ~= "" then
+            table.insert(stderr_lines, line)
+          end
+        end
+      end
+    end,
+    on_exit = function(_, exit_code, _)
+      vim.schedule(function()
+        if exit_code == 0 then
+          local output_path = filedir .. '/' .. output_bib
+          notify.editor('Bibexport complete', notify.categories.USER_ACTION, { file = output_path })
+        else
+          local stderr_msg = table.concat(stderr_lines, "\n")
+          if stderr_msg ~= "" then
+            -- Truncate to last 5 lines to keep notification readable
+            local lines = {}
+            for line in stderr_msg:gmatch("[^\n]+") do
+              table.insert(lines, line)
+            end
+            local truncated = {}
+            local start_idx = math.max(1, #lines - 4)
+            for i = start_idx, #lines do
+              table.insert(truncated, lines[i])
+            end
+            stderr_msg = table.concat(truncated, "; ")
+            notify.editor('Bibexport failed: ' .. stderr_msg, notify.categories.ERROR, { file = filename })
+          else
+            notify.editor('Bibexport failed (exit code: ' .. exit_code .. ')', notify.categories.ERROR, { file = filename })
+          end
+        end
+      end)
+    end,
+  })
 end
 
 -- Returns the Zathura PID and D-Bus address, or nil if not running.

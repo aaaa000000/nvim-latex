@@ -1,0 +1,70 @@
+{
+  "version": "1.0.0",
+  "generated_at": "2026-05-12",
+  "entry_count": 3,
+  "total_tokens": 458,
+  "entries": [
+    {
+      "id": "MEM-plan-delegation-required",
+      "path": ".memory/10-Memories/MEM-plan-delegation-required.md",
+      "title": "Artifact Creation Must Use Skill Delegation",
+      "summary": "When executing /plan, /research, or /implement commands, always invoke the appropriate Skill tool to create artifact files rather than writing directly from the orchestrator level.",
+      "topic": "agent-system",
+      "category": "enforcement",
+      "keywords": [
+        "delegation",
+        "artifact",
+        "skill",
+        "bypass-prevention",
+        "enforcement"
+      ],
+      "token_count": 302,
+      "created": "2026-04-13",
+      "modified": "2026-04-13",
+      "last_retrieved": "2026-05-11",
+      "retrieval_count": 19
+    },
+    {
+      "id": "MEM-config-nextcord-discord-nixos",
+      "path": ".memory/10-Memories/MEM-config-nextcord-discord-nixos.md",
+      "title": "Nextcord is the optimal Discord bot library on NixOS",
+      "summary": "For Discord bot development on NixOS, nextcord (python3Packages.nextcord, v3.1.1) is the optimal choice",
+      "topic": "configuration",
+      "category": "CONFIG",
+      "keywords": [
+        "discord",
+        "nextcord",
+        "discordpy",
+        "nixpkgs",
+        "bot",
+        "python"
+      ],
+      "token_count": 65,
+      "created": "2026-05-12",
+      "modified": "2026-05-12",
+      "last_retrieved": null,
+      "retrieval_count": 0
+    },
+    {
+      "id": "MEM-insight-opencode-headless-cli-api",
+      "path": ".memory/10-Memories/MEM-insight-opencode-headless-cli-api.md",
+      "title": "OpenCode headless/CLI API for programmatic agent control",
+      "summary": "OpenCode has a comprehensive headless/CLI API: 'opencode serve' starts a persistent server",
+      "topic": "insight",
+      "category": "INSIGHT",
+      "keywords": [
+        "opencode",
+        "headless",
+        "server",
+        "CLI",
+        "session-management",
+        "programmatic-access"
+      ],
+      "token_count": 91,
+      "created": "2026-05-12",
+      "modified": "2026-05-12",
+      "last_retrieved": null,
+      "retrieval_count": 0
+    }
+  ]
+}

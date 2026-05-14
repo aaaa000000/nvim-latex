@@ -1,0 +1,46 @@
+{
+  "name": "z3",
+  "version": "1.0.0",
+  "description": "Z3 SMT solver development with constraint pattern support",
+  "language": "z3",
+  "dependencies": [
+    "core"
+  ],
+  "provides": {
+    "agents": [
+      "z3-research-agent.md",
+      "z3-implementation-agent.md"
+    ],
+    "skills": [
+      "skill-z3-research",
+      "skill-z3-implementation"
+    ],
+    "commands": [],
+    "rules": [],
+    "context": [
+      "project/z3"
+    ],
+    "scripts": [],
+    "hooks": []
+  },
+  "routing": {
+    "research": {
+      "z3": "skill-z3-research"
+    },
+    "implement": {
+      "z3": "skill-z3-implementation"
+    }
+  },
+  "merge_targets": {
+    "opencode_md": {
+      "source": "EXTENSION.md",
+      "target": ".opencode/AGENTS.md",
+      "section_id": "extension_oc_z3"
+    },
+    "index": {
+      "source": "index-entries.json",
+      "target": ".opencode/context/index.json"
+    }
+  },
+  "mcp_servers": {}
+}

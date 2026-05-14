@@ -1,0 +1,125 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "default_agent": "build",
+  "permission": {
+    "edit": "allow",
+    "external_directory": {
+      "*": "ask"
+    },
+    "bash": {
+      "*": "allow",
+      "deny": [
+        "rm -rf *",
+        "sudo *",
+        "chmod 777 *",
+        "chmod -R *"
+      ]
+    }
+  },
+  "agent": {
+    "build": {
+      "mode": "primary",
+      "prompt": "You are the primary build agent. When performing temporary work, use the project's specs/tmp/ directory instead of /tmp/ to keep all artifacts within the workspace."
+    },
+    "plan": {
+      "mode": "primary",
+      "prompt": "You are in planning mode. Analyze requests and create detailed implementation plans without making code changes. Focus on architecture, dependencies, and step-by-step approaches. When performing temporary work, use the project's specs/tmp/ directory instead of /tmp/.",
+      "tools": {
+        "write": false,
+        "edit": false,
+        "bash": false
+      }
+    },
+    "task-planner": {
+      "description": "Create implementation plans from research findings",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/planner-agent.md}",
+      "tools": {
+        "write": true,
+        "edit": true,
+        "read": true
+      }
+    },
+    "general-research": {
+      "description": "Research general tasks using web search and codebase exploration",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/general-research-agent.md}",
+      "tools": {
+        "write": true,
+        "edit": true,
+        "bash": true,
+        "read": true,
+        "grep": true,
+        "glob": true,
+        "webfetch": true,
+        "websearch": true
+      }
+    },
+    "general-implementation": {
+      "description": "Implement general, meta, and markdown tasks from plans",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/general-implementation-agent.md}",
+      "tools": {
+        "write": true,
+        "edit": true,
+        "bash": true,
+        "read": true,
+        "grep": true,
+        "glob": true
+      }
+    },
+    "meta-builder": {
+      "description": "Interactive system builder for .opencode/ architecture changes",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/meta-builder-agent.md}",
+      "tools": {
+        "write": true,
+        "edit": true,
+        "bash": true,
+        "read": true,
+        "grep": true,
+        "glob": true
+      }
+    },
+    "reviser": {
+      "description": "Revise implementation plans based on feedback and new findings",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/reviser-agent.md}",
+      "tools": {
+        "write": true,
+        "edit": true,
+        "bash": true,
+        "read": true,
+        "grep": true,
+        "glob": true
+      }
+    },
+    "spawn": {
+      "description": "Spawn sub-tasks to research blockers and overcome obstacles",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/spawn-agent.md}",
+      "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "bash": true,
+        "grep": true,
+        "glob": true,
+        "webfetch": true,
+        "websearch": true
+      }
+    },
+    "code-reviewer": {
+      "description": "Review code for security, performance, and maintainability",
+      "mode": "subagent",
+      "prompt": "You are a code reviewer. Focus on security, performance, maintainability, and adherence to project standards. Provide constructive feedback without making direct changes.",
+      "tools": {
+        "write": false,
+        "edit": false,
+        "bash": false,
+        "read": true,
+        "grep": true
+      }
+    }
+  }
+}

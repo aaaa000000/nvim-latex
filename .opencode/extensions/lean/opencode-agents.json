@@ -1,0 +1,16 @@
+{
+  "agent": {
+    "lean-implementation": {
+      "description": "Implement Lean 4 proofs following implementation plans",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/lean-implementation-agent.md}",
+      "tools": {"write":true,"edit":true,"bash":true,"read":true,"glob":true,"grep":true}
+    },
+    "lean-research": {
+      "description": "Research Lean 4 and Mathlib for theorem proving tasks",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/lean-research-agent.md}",
+      "tools": {"read":true,"write":true,"edit":true,"glob":true,"grep":true,"bash":true,"webfetch":true,"websearch":true}
+    }
+  }
+}

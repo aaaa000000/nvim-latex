@@ -1,0 +1,50 @@
+{
+  "name": "formal",
+  "version": "1.0.0",
+  "description": "Formal reasoning extension providing agents, skills, and context for mathematical logic, mathematics, and physics research. Includes modal logic, Kripke semantics, lattice theory, category theory, and dynamical systems.",
+  "language": "formal",
+  "dependencies": [
+    "core"
+  ],
+  "provides": {
+    "agents": [
+      "formal-research-agent.md",
+      "logic-research-agent.md",
+      "math-research-agent.md",
+      "physics-research-agent.md"
+    ],
+    "skills": [
+      "skill-formal-research",
+      "skill-logic-research",
+      "skill-math-research",
+      "skill-physics-research"
+    ],
+    "context": [
+      "project/logic",
+      "project/math",
+      "project/physics"
+    ],
+    "commands": [],
+    "scripts": [],
+    "rules": []
+  },
+  "routing": {
+    "research": {
+      "formal": "skill-formal-research",
+      "formal:logic": "skill-logic-research",
+      "formal:math": "skill-math-research",
+      "formal:physics": "skill-physics-research"
+    }
+  },
+  "merge_targets": {
+    "opencode_md": {
+      "source": "EXTENSION.md",
+      "target": ".opencode/AGENTS.md",
+      "section_id": "extension_oc_formal"
+    },
+    "index": {
+      "source": "index-entries.json",
+      "target": ".opencode/context/index.json"
+    }
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "agent": {
+    "grant": {
+      "description": "Research funders and draft grant proposals",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/grant-agent.md}",
+      "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "glob": true,
+        "grep": true,
+        "bash": true,
+        "webfetch": true,
+        "websearch": true
+      }
+    },
+    "budget": {
+      "description": "Generate grant budget spreadsheets with Excel formulas",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/budget-agent.md}",
+      "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "glob": true,
+        "grep": true,
+        "bash": true,
+        "webfetch": true,
+        "websearch": true
+      }
+    },
+    "timeline": {
+      "description": "Plan research project timelines with WBS and PERT scheduling",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/timeline-agent.md}",
+      "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "glob": true,
+        "grep": true,
+        "bash": true,
+        "webfetch": true,
+        "websearch": true
+      }
+    },
+    "funds": {
+      "description": "Analyze research funding landscape and portfolio",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/funds-agent.md}",
+      "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "glob": true,
+        "grep": true,
+        "bash": true,
+        "webfetch": true,
+        "websearch": true
+      }
+    },
+    "slides": {
+      "description": "Synthesize research materials into academic presentations",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/slides-agent.md}",
+      "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "glob": true,
+        "grep": true,
+        "bash": true,
+        "webfetch": true,
+        "websearch": true
+      }
+    }
+  }
+}

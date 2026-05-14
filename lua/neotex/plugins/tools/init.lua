@@ -85,6 +85,7 @@ local himalaya_module = safe_require("neotex.plugins.tools.himalaya-plugin")
 local worktree_module = safe_require("neotex.plugins.tools.worktree")
 local wezterm_module = safe_require("neotex.plugins.tools.wezterm-integration")
 local stt_module = safe_require("neotex.plugins.tools.stt-plugin")
+local mail_module = safe_require("neotex.plugins.tools.mail")
 
 -- Create array of valid plugin specs
 local plugins = {}
@@ -119,6 +120,13 @@ add_if_valid(wezterm_module)
 
 -- STT (Speech-to-Text) plugin
 add_if_valid(stt_module)
+
+-- Mail integration (aerc + notmuch)
+if type(mail_module) == "table" then
+  for _, spec in ipairs(mail_module) do
+    add_if_valid(spec)
+  end
+end
 
 -- Return only valid plugin specs
 return plugins

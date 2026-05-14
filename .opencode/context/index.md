@@ -1,7 +1,8 @@
 # Context Index - Lazy-Loading Quick Map
 
+**Version**: 5.0
 **Created**: 2025-12-23
-**Updated**: 2026-02-05 (Task 8 - Added Web context section)
+**Updated**: 2026-02-28 (Task 167 - Feature Parity with OpenCode)
 **Purpose**: Quick reference map for on-demand context loading following checkpoint-based execution
 
 ---
@@ -9,13 +10,11 @@
 ## Usage Pattern
 
 **Routing Stage** (Orchestrator Stages 1-3):
-
 - Load NO context files during routing
 - Make routing decisions with command frontmatter only
 - Target: <10% context window usage
 
 **Execution Stage** (Agent Stage 4+):
-
 - Load only files needed for specific workflow
 - Use index.md to identify required files
 - Load context on-demand via @.opencode/context/{category}/{file}
@@ -118,7 +117,6 @@
   - **LOAD when implementing postflight**
 
 **Deprecated files** (still available for reference):
-
 - orchestrator.md -> orchestration-core.md, orchestration-reference.md
 - delegation.md -> orchestration-core.md, orchestration-validation.md
 - routing.md -> orchestration-core.md
@@ -176,12 +174,12 @@ Load for: Behavior patterns that apply across all agents/skills
 - **inline-status-update.md** (~200 lines) - Reusable status update snippets
   - Preflight patterns for research/planning/implementation
   - Postflight patterns with artifact linking
-  - TODO.md edit patterns
+  - specs/TODO.md edit patterns
   - Error handling patterns
   - **MUST load when adding status management to skills**
 
 - **jq-escaping-workarounds.md** (~150 lines) - jq command escaping bug workarounds
-  - Documents Claude Code Issue #1132 (Bash tool jq escaping)
+  - Documents OpenCode Issue #1132 (Bash tool jq escaping)
   - Two-step approach for artifact updates
   - Pattern templates for research/planning/implementation postflight
   - Testing checklist for new jq patterns
@@ -197,7 +195,6 @@ Load for: Behavior patterns that apply across all agents/skills
   - File location pattern
   - Schema quick reference
   - Status values (contextual, never "completed")
-  - Agent writing and skill reading patterns
 
 - **checkpoint-execution.md** (~180 lines) - Quick reference for command checkpoint pattern
   - Three-checkpoint model (GATE IN, DELEGATE, GATE OUT, COMMIT)
@@ -224,7 +221,7 @@ Load for: Task validation, artifact creation, documentation standards
 
 - **status-markers.md** (350 lines) - **Complete** status marker reference
   - Standard status markers (NOT STARTED, RESEARCHING, PLANNED, etc.)
-  - TODO.md vs state.json mapping
+  - specs/TODO.md vs specs/state.json mapping
   - Command → Status mapping
   - Valid transition rules and diagrams
   - Atomic synchronization protocol
@@ -233,7 +230,7 @@ Load for: Task validation, artifact creation, documentation standards
 - **ci-workflow.md** (140 lines) - CI workflow standards and trigger criteria
   - Skip-by-default behavior with `[ci]` marker
   - Decision criteria for triggering CI
-  - Language-based defaults (neovim triggers, meta/markdown skip)
+  - Language-based defaults (lean triggers, meta/markdown skip)
   - Task lifecycle CI triggers
 - **tasks.md** (227 lines) - Task entry format, required fields, validation rules
 - **documentation.md** (178 lines) - Documentation standards, NO EMOJI policy
@@ -290,24 +287,20 @@ Load for: Creating new agents, commands, orchestrators
 Load for: Component development and architecture understanding
 
 **Component Development**:
-
 - **component-selection.md** - Decision tree for command vs skill vs agent
 - **creating-commands.md** - Step-by-step command creation
 - **creating-skills.md** - Step-by-step skill creation (thin wrapper pattern)
 - **creating-agents.md** - Step-by-step agent creation (8-stage workflow)
 
 **Context Loading**:
-
 - **context-loading-best-practices.md** - Lazy loading patterns
 
 **Examples**:
-
 - **examples/research-flow-example.md** - End-to-end /research command flow
 
 **When to Load**:
-
 - Load component-selection.md when deciding what to create
-- Load creating-\*.md when implementing new component
+- Load creating-*.md when implementing new component
 - Load research-flow-example.md for understanding flow patterns
 
 ---
@@ -316,103 +309,63 @@ Load for: Component development and architecture understanding
 
 Load only when needed for language-specific workflows:
 
-### Neovim Context (project/neovim/)
+### Lean4 Context (project/lean4/)
 
-Load for: Neovim implementation tasks (Language: neovim)
-
-**Overview**:
-
-- **README.md** (~80 lines) - Directory overview and loading strategy
-
-**Domain**:
-
-- **lua-patterns.md** - Lua idioms for Neovim
-- **plugin-ecosystem.md** - lazy.nvim, common plugins
-- **lsp-overview.md** - LSP concepts, mason, nvim-lspconfig
-- **neovim-api.md** - vim.api, vim.fn, vim.opt patterns
-
-**Patterns**:
-
-- **plugin-spec.md** - lazy.nvim plugin specification
-- **keymap-patterns.md** - vim.keymap.set, which-key
-- **autocommand-patterns.md** - vim.api.nvim_create_autocmd
-- **ftplugin-patterns.md** - after/ftplugin structure
+Load for: Lean implementation tasks (Language: lean)
 
 **Standards**:
-
-- **lua-style-guide.md** - Lua conventions
-- **testing-patterns.md** - plenary.nvim testing
+- **lean4-style-guide.md** - Lean 4 coding conventions
+- **proof-conventions-lean.md** - Lean-specific proof conventions
+- **proof-readability-criteria.md** - Proof readability standards
 
 **Tools**:
-
-- **lazy-nvim-guide.md** - lazy.nvim usage
-- **treesitter-guide.md** - Tree-sitter configuration
-- **telescope-guide.md** - Telescope patterns
-
-**Templates**:
-
-- **plugin-template.md** - New plugin spec template
-- **ftplugin-template.md** - New ftplugin template
-
-**When to Load**:
-
-- Load README.md for overview on any Neovim task
-- Load lua-style-guide.md when setting up Lua modules
-- Load plugin-spec.md when working with plugin configuration
-- Load keymap-patterns.md when defining keybindings
-- Load autocommand-patterns.md when working with autocmds
-
-### Web Context (project/web/)
-
-Load for: Web implementation tasks (Language: web)
-
-**Overview**:
-
-- **README.md** (~80 lines) - Directory overview and loading strategy
-
-**Domain**:
-
-- **astro-framework.md** - Astro core concepts, island architecture, routing
-- **tailwind-v4.md** - Tailwind CSS v4, CSS-first config, @theme directive
-- **cloudflare-pages.md** - Cloudflare Pages deployment, edge functions
-- **typescript-web.md** - TypeScript patterns for web development
+- **leansearch-api.md** - LeanSearch REST API integration
+- **loogle-api.md** - Loogle CLI interface
+- **lsp-integration.md** - lean-lsp-mcp integration
+- **aesop-integration.md** - Aesop tactic integration
+- **mcp-tools-guide.md** - MCP tools overview
 
 **Patterns**:
+- **tactic-patterns.md** - Common tactic patterns
 
-- **astro-component.md** - Component structure, Props, scoped styles
-- **astro-layout.md** - Layout patterns, slot usage, nested layouts
-- **astro-content-collections.md** - Content collections, schemas, querying
-- **tailwind-patterns.md** - Utility class ordering, responsive design
-- **accessibility-patterns.md** - ARIA, keyboard nav, screen reader support
+**Processes**:
+- **end-to-end-proof-workflow.md** - Complete proof development workflow
+- **project-structure-best-practices.md** - Repository organization
 
-**Standards**:
-
-- **web-style-guide.md** - Naming conventions, code organization
-- **performance-standards.md** - Core Web Vitals targets, optimization
-- **accessibility-standards.md** - WCAG 2.2 compliance requirements
-
-**Tools**:
-
-- **astro-cli-guide.md** - astro dev, build, check commands
-- **pnpm-guide.md** - pnpm workspace, scripts, dependency management
-- **cloudflare-deploy-guide.md** - Deployment configuration and workflow
+**Domain**:
+- **dependent-types.md** - Dependent type theory concepts
+- **key-mathematical-concepts.md** - Core mathematical concepts
+- **lean4-syntax.md** - Lean 4 syntax reference
+- **mathlib-overview.md** - Mathlib library overview
 
 **Templates**:
+- **definition-template.md** - Definition structure template
+- **new-file-template.md** - New Lean file template
+- **proof-structure-templates.md** - Proof structure templates
 
-- **astro-page-template.md** - Boilerplate for new pages
-- **astro-component-template.md** - Boilerplate for new components
+### Logic Context (project/logic/)
 
-**When to Load**:
+Load for: Proof theory tasks
 
-- Load README.md for overview on any web task
-- Load astro-framework.md when working with Astro concepts
-- Load tailwind-v4.md when working with styling
-- Load astro-component.md when creating components
-- Load astro-content-collections.md when working with content
-- Load performance-standards.md when optimizing performance
-- Load accessibility-standards.md when auditing accessibility
+**Standards**:
+- **proof-conventions.md** - Canonical proof principles
+- **notation-standards.md** - Notation conventions
+- **naming-conventions.md** - Naming standards
 
----
+**Processes**:
+- **modal-proof-strategies.md** - Modal logic proof strategies
+- **temporal-proof-strategies.md** - Temporal logic proof strategies
+- **proof-construction.md** - General proof construction
+- **verification-workflow.md** - Verification procedures
+
+**Domain**:
+- **kripke-semantics-overview.md** - Kripke semantics concepts
+- **metalogic-concepts.md** - Metalogic theory
+- **proof-theory-concepts.md** - Proof theory foundations
+- **task-semantics.md** - Task-based semantics
+- **modal-logic-extensions.md** - Modal logic extensions and variants
+- **temporal-logic-patterns.md** - Temporal logic patterns
+- **proof-theory-basics.md** - Proof theory fundamentals
 
 ### Repo Context (project/repo/)
 
@@ -420,6 +373,136 @@ Load for: General markdown/documentation tasks (Language: markdown)
 
 - **project-overview.md** - Repository structure and organization
 - **self-healing-implementation-details.md** - Self-healing system details
+
+### Math Context (project/math/)
+
+Load for: Mathematical domain tasks
+
+**Algebra**:
+- **groups-and-monoids.md** - Group theory concepts
+- **rings-and-fields.md** - Ring and field theory
+
+**Order Theory**:
+- **partial-orders.md** - Partial order concepts
+
+**Lattice Theory**:
+- **lattices.md** - Lattice theory concepts
+
+**Topology**:
+- **topological-spaces.md** - Topology concepts
+
+**Category Theory**:
+- **category-basics.md** - Category theory fundamentals
+- **functors-natural-transformations.md** - Functors and natural transformations
+- **limits-colimits.md** - Limits and colimits
+- **adjunctions.md** - Adjoint functors
+- **monoidal-categories.md** - Monoidal categories
+
+**Foundations**:
+- **set-theory-foundations.md** - Set-theoretic foundations
+
+### Typst Context (project/typst/)
+
+Load for: Typst documentation tasks (Language: typst)
+
+**Overview**:
+- **typst-overview.md** - Typst language overview
+- **typst-vs-latex.md** - Typst vs LaTeX comparison
+- **typst-packages.md** - Typst package ecosystem
+
+**Patterns**:
+- **document-structure.md** - Document organization patterns
+- **styling-patterns.md** - Styling and theming patterns
+- **bibliography.md** - Bibliography management
+- **tables-and-figures.md** - Tables and figures
+- **math-typesetting.md** - Mathematical typesetting
+
+**Templates**:
+- **article-template.md** - Article document template
+- **report-template.md** - Report document template
+- **presentation-template.md** - Presentation template
+- **thesis-template.md** - Thesis document template
+
+**Standards**:
+- **typst-style-guide.md** - Typst coding style guide
+- **compilation-standards.md** - Compilation best practices
+- **package-usage.md** - Package usage guidelines
+
+### Neovim Context (project/neovim/)
+
+Load for: Neovim configuration tasks (Language: neovim)
+
+**Overview**:
+- **README.md** - Neovim domain overview
+- **lua-patterns.md** - Common Lua patterns for Neovim
+
+**Domain**:
+- **neovim-api.md** - Neovim API reference
+- **plugin-ecosystem.md** - Plugin ecosystem overview
+- **lsp-overview.md** - LSP integration concepts
+- **lua-patterns.md** - Lua coding patterns
+
+**Patterns**:
+- **plugin-spec.md** - lazy.nvim plugin specification patterns
+- **keymap-patterns.md** - Keymap configuration patterns
+- **autocommand-patterns.md** - Autocommand patterns
+- **ftplugin-patterns.md** - Filetype plugin patterns
+
+**Standards**:
+- **lua-style-guide.md** - Lua coding style guide
+- **testing-patterns.md** - Testing patterns for Neovim
+
+**Templates**:
+- **plugin-template.md** - Plugin specification template
+- **ftplugin-template.md** - Filetype plugin template
+
+**Tools**:
+- **lazy-nvim-guide.md** - lazy.nvim plugin manager guide
+- **telescope-guide.md** - Telescope picker guide
+- **treesitter-guide.md** - Tree-sitter integration guide
+
+### Web Context (project/web/)
+
+Load for: Web development tasks (Language: web)
+
+**Overview**:
+- **README.md** - Web domain overview
+- **astro-framework.md** - Astro framework overview
+- **tailwind-v4.md** - Tailwind v4 overview
+
+**Domain**:
+- **astro-framework.md** - Astro framework concepts
+- **cloudflare-pages.md** - Cloudflare Pages deployment
+- **tailwind-v4.md** - Tailwind v4 concepts
+- **typescript-web.md** - TypeScript for web patterns
+
+**Patterns**:
+- **astro-component.md** - Astro component patterns
+- **astro-content-collections.md** - Content collections patterns
+- **astro-layout.md** - Layout patterns
+- **tailwind-patterns.md** - Tailwind utility patterns
+- **accessibility-patterns.md** - Accessibility patterns
+
+**Standards**:
+- **web-style-guide.md** - Web coding style guide
+- **performance-standards.md** - Performance standards
+- **accessibility-standards.md** - Accessibility standards
+
+**Templates**:
+- **astro-component-template.md** - Astro component template
+- **astro-page-template.md** - Astro page template
+
+**Tools**:
+- **astro-cli-guide.md** - Astro CLI guide
+- **cloudflare-deploy-guide.md** - Cloudflare deployment guide
+- **pnpm-guide.md** - pnpm package manager guide
+
+### Physics Context (project/physics/)
+
+Load for: Physics domain tasks
+
+**Dynamical Systems**:
+- **dynamical-systems.md** - Dynamical systems concepts
 
 ---
 
@@ -432,6 +515,41 @@ Load for: Orchestrator and routing patterns
 
 ---
 
+## Skills Context (skills/)
+
+Load for: Command delegation and agent invocation
+
+**Available Skills** (thin wrapper pattern):
+- **skill-implementer** - Execute implementation tasks via general-implementation-agent
+  - Path: `.opencode/skills/skill-implementer/SKILL.md`
+  - Agent: general-implementation-agent
+  - Trigger: /implement command
+
+- **skill-planner** - Create implementation plans via planner-agent
+  - Path: `.opencode/skills/skill-planner/SKILL.md`
+  - Agent: planner-agent
+  - Trigger: /plan command
+
+- **skill-researcher** - Conduct research via researcher-agent
+  - Path: `.opencode/skills/skill-researcher/SKILL.md`
+  - Agent: researcher-agent
+  - Trigger: /research command
+
+- **skill-meta** - Meta system building via meta-builder-agent
+  - Path: `.opencode/skills/skill-meta/SKILL.md`
+  - Agent: meta-builder-agent
+  - Trigger: /meta command
+
+**Skill Pattern**: All skills follow the thin wrapper pattern:
+1. Load context files via <context_injection>
+2. Reference command files for workflow steps
+3. Delegate to specialized agent via Task tool
+4. Coordinate postflight updates
+
+**CRITICAL**: Skills only load context and delegate. Commands execute preflight/postflight workflows.
+
+---
+
 ## Meta Context (Integrated into core/)
 
 Load for: /meta command and meta-builder-agent workflows
@@ -441,31 +559,26 @@ Load for: /meta command and meta-builder-agent workflows
 **Note**: /meta now uses the skill-meta -> meta-builder-agent delegation pattern (Task 429, 2026-01-12)
 
 **Component Development Guides** (docs/guides/):
-
 - **component-selection.md** - Decision tree for what to create (command vs skill vs agent)
 - **creating-commands.md** - Step-by-step command creation guide
 - **creating-skills.md** - Step-by-step skill creation guide (thin wrapper pattern)
 - **creating-agents.md** - Step-by-step agent creation guide (8-stage workflow)
 
 **Interview Patterns** (core/workflows/):
-
 - **interview-patterns.md** (226 lines) - Progressive disclosure, adaptive questioning, validation checkpoints
 
 **Architecture Design** (core/standards/):
-
 - **architecture-principles.md** (272 lines) - Modular design, hierarchical organization, context efficiency
-- **domain-patterns.md** (260 lines) - Development, business, hybrid, and Neovim-specific domain patterns
+- **domain-patterns.md** (260 lines) - Development, business, hybrid, and Logos/Theory-specific domain patterns
 
 **Agent Templates** (core/templates/):
-
 - **agent-templates.md** (336 lines) - Orchestrator, research, validation, processing, and generation templates
 
 **Loading Strategy for meta-builder-agent**:
-
 - **Interactive mode**: Load component-selection.md during interview Stage 2
 - **Prompt mode**: Load component-selection.md for analysis
-- **Analyze mode**: Load CLAUDE.md and index.md for system inventory
-- Load creating-\*.md guides when specific component types are being discussed
+- **Analyze mode**: Load AGENTS.md and index.md for system inventory
+- Load creating-*.md guides when specific component types are being discussed
 - Never load during routing (Stages 1-3)
 
 ---
@@ -474,15 +587,14 @@ Load for: /meta command and meta-builder-agent workflows
 
 Load selectively: Use grep extraction for specific tasks, avoid loading full file
 
-- **TODO.md** - Active task list (large file - load via: `grep -A 50 "^### {task_number}\." TODO.md`)
-- **state.json** - Project state tracking (load full file, ~8KB)
+- **TODO.md** - Active task list (large file - load via: `grep -A 50 "^### {task_number}\." specs/TODO.md`)
+- **specs/state.json** - Project state tracking (load full file, ~8KB)
 
 ---
 
 ## Context Loading Examples
 
 **Research Workflow (researcher.md)**:
-
 ```
 Stage 4 loads:
 - @.opencode/context/core/orchestration/orchestration-core.md
@@ -491,12 +603,11 @@ Stage 4 loads:
 - @specs/state.json
 
 Language-specific:
-- If neovim: @.opencode/context/project/neovim/domain/neovim-api.md
+- If lean: @.opencode/context/project/lean4/tools/leansearch-api.md
 - If markdown: (no additional context)
 ```
 
 **Planning Workflow (planner.md)**:
-
 ```
 Stage 4 loads:
 - @.opencode/context/core/orchestration/orchestration-core.md
@@ -508,7 +619,6 @@ Stage 4 loads:
 ```
 
 **Implementation Workflow (implementer.md, task-executor.md)**:
-
 ```
 Stage 4 loads:
 - @.opencode/context/core/orchestration/orchestration-core.md
@@ -519,8 +629,8 @@ Stage 4 loads:
 - Plan file (if exists)
 
 Language-specific:
-- If neovim: @.opencode/context/project/neovim/standards/lua-style-guide.md
-- If neovim: @.opencode/context/project/neovim/tools/lazy-nvim-guide.md
+- If lean: @.opencode/context/project/lean4/standards/lean4-style-guide.md
+- If lean: @.opencode/context/project/lean4/tools/lsp-integration.md
 ```
 
 **Meta Workflow (meta-builder-agent)**:
@@ -528,9 +638,8 @@ Language-specific:
 See `.opencode/agents/meta-builder-agent.md` for complete stage-by-stage context loading guidance.
 
 Quick reference:
-
 - Interactive/Prompt modes: component-selection.md + on-demand component guides
-- Analyze mode: CLAUDE.md + index.md (read-only analysis)
+- Analyze mode: AGENTS.md + index.md (read-only analysis)
 - All modes: subagent-return.md (always)
 
 ---
@@ -546,14 +655,12 @@ Quick reference:
 ## Consolidation Summary (Task 246 Phase 3)
 
 **Completed**:
-
 - ✓ Delegation files merged: 1,003 → 510 lines (50% reduction)
 - ✓ State management files merged: 1,574 → 535 lines (66% reduction)
 - ✓ command-lifecycle.md deprecated: 1,138 lines pending removal
 - ✓ Total reduction: 3,715 → 1,045 lines (72% reduction, 2,670 lines saved)
 
 **Deprecated Files** (deprecation period ended 2025-01-29, now removed):
-
 - subagent-return-format.md → core/standards/delegation.md#return-format (removed)
 - subagent-delegation-guide.md → core/standards/delegation.md#delegation-patterns (removed)
 - state-schema.md → core/system/state-management.md#state-schemas (removed)
@@ -575,7 +682,6 @@ Quick reference:
 ## Quick Navigation
 
 **For Component Development**:
-
 - **Component Selection**: → `docs/guides/component-selection.md`
 - **Creating Commands**: → `docs/guides/creating-commands.md`
 - **Creating Skills**: → `docs/guides/creating-skills.md`
@@ -583,21 +689,11 @@ Quick reference:
 - **Skill Template**: → `core/templates/thin-wrapper-skill.md`
 
 **For Standards**:
-
 - **For Delegation**: → `core/standards/delegation.md`
 - **For State Management**: → `core/system/state-management.md`
 - **For Artifacts**: → `core/system/artifact-management.md`
 - **For Git Commits**: → `core/system/git-commits.md`
 - **For Task Format**: → `core/standards/tasks.md`
 - **For Plan Format**: → `core/standards/plan.md`
-- **For Neovim Lua Style**: → `project/neovim/standards/lua-style-guide.md`
-- **For Plugin Patterns**: → `project/neovim/patterns/plugin-spec.md`
-
-**For Web Development**:
-
-- **Astro Framework**: → `project/web/domain/astro-framework.md`
-- **Tailwind CSS v4**: → `project/web/domain/tailwind-v4.md`
-- **Astro Components**: → `project/web/patterns/astro-component.md`
-- **Web Style Guide**: → `project/web/standards/web-style-guide.md`
-- **Performance Standards**: → `project/web/standards/performance-standards.md`
-- **Accessibility Standards**: → `project/web/standards/accessibility-standards.md`
+- **For Lean Style**: → `project/lean4/standards/lean4-style-guide.md`
+- **For Proof Conventions**: → `project/logic/standards/proof-conventions.md`

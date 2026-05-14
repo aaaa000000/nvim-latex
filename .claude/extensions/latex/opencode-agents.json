@@ -1,0 +1,32 @@
+{
+  "agent": {
+    "latex-research": {
+      "description": "Research LaTeX documentation and formatting topics",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/latex-research-agent.md}",
+      "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "glob": true,
+        "grep": true,
+        "bash": true,
+        "webfetch": true,
+        "websearch": true
+      }
+    },
+    "latex-implementation": {
+      "description": "Implement LaTeX documents and formatting",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/latex-implementation-agent.md}",
+      "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "glob": true,
+        "grep": true,
+        "bash": true
+      }
+    }
+  }
+}

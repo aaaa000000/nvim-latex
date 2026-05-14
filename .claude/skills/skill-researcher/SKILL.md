@@ -3,7 +3,7 @@ name: skill-researcher
 description: Conduct general research using web search, documentation, and codebase exploration. Invoke for general research tasks.
 allowed-tools: Task, Bash, Edit, Read, Write
 # Original context (now loaded by subagent):
-#   - .claude/context/core/formats/report-format.md
+#   - .claude/context/formats/report-format.md
 # Original tools (now used by subagent):
 #   - Read, Write, Edit, Glob, Grep, WebSearch, WebFetch
 ---
@@ -19,17 +19,17 @@ This eliminates the "continue" prompt issue between skill return and orchestrato
 ## Context References
 
 Reference (do not load eagerly):
-- Path: `.claude/context/core/formats/return-metadata-file.md` - Metadata file schema
-- Path: `.claude/context/core/patterns/postflight-control.md` - Marker file protocol
-- Path: `.claude/context/core/patterns/file-metadata-exchange.md` - File I/O helpers
-- Path: `.claude/context/core/patterns/jq-escaping-workarounds.md` - jq escaping patterns (Issue #1132)
+- Path: `.claude/context/formats/return-metadata-file.md` - Metadata file schema
+- Path: `.claude/context/patterns/postflight-control.md` - Marker file protocol
+- Path: `.claude/context/patterns/file-metadata-exchange.md` - File I/O helpers
+- Path: `.claude/context/patterns/jq-escaping-workarounds.md` - jq escaping patterns (Issue #1132)
 
 Note: This skill is a thin wrapper with internal postflight. Context is loaded by the delegated agent.
 
 ## Trigger Conditions
 
 This skill activates when:
-- Task language is "general", "meta", "markdown", "latex", or "typst"
+- Task type is "general", "meta", "markdown", "latex", or "typst"
 - Research is needed for implementation planning
 - Documentation or external resources need to be gathered
 
@@ -55,7 +55,7 @@ if [ -z "$task_data" ]; then
 fi
 
 # Extract fields
-language=$(echo "$task_data" | jq -r '.language // "general"')
+task_type=$(echo "$task_data" | jq -r '.task_type // "general"')
 status=$(echo "$task_data" | jq -r '.status')
 project_name=$(echo "$task_data" | jq -r '.project_name')
 description=$(echo "$task_data" | jq -r '.description // ""')
@@ -67,19 +67,11 @@ description=$(echo "$task_data" | jq -r '.description // ""')
 
 Update task status to "researching" BEFORE invoking subagent.
 
-**Update state.json**:
 ```bash
-jq --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-   --arg status "researching" \
-   --arg sid "$session_id" \
-  '(.active_projects[] | select(.project_number == '$task_number')) |= . + {
-    status: $status,
-    last_updated: $ts,
-    session_id: $sid
-  }' specs/state.json > /tmp/state.json && mv /tmp/state.json specs/state.json
+.claude/scripts/update-task-status.sh preflight "$task_number" research "$session_id"
 ```
 
-**Update TODO.md**: Use Edit tool to change status marker from `[NOT STARTED]` or `[RESEARCHED]` to `[RESEARCHING]`.
+This atomically updates state.json (status, timestamps, session_id), TODO.md task entry, and TODO.md Task Order section. If the script exits non-zero, abort and keep current status.
 
 ---
 
@@ -107,6 +99,133 @@ EOF
 
 ---
 
+### Stage 3a: Read Artifact Number
+
+Read `next_artifact_number` from state.json (or fall back to directory scanning for legacy tasks):
+
+```bash
+# Read next_artifact_number from state.json
+artifact_number=$(jq -r --argjson num "$task_number" \
+  '.active_projects[] | select(.project_number == $num) | .next_artifact_number // 1' \
+  specs/state.json)
+
+# Fallback for legacy tasks: count existing artifacts
+if [ "$artifact_number" = "null" ] || [ -z "$artifact_number" ]; then
+  padded_num=$(printf "%03d" "$task_number")
+  count=$(ls "specs/${padded_num}_${project_name}/reports/"*[0-9][0-9]*.md 2>/dev/null | wc -l)
+  artifact_number=$((count + 1))
+fi
+
+artifact_padded=$(printf "%02d" "$artifact_number")
+```
+
+---
+
+### Stage 4a: Memory Retrieval (Auto)
+
+Retrieve relevant memories from the memory system to inject into the delegation context.
+
+**Skip if**: `clean_flag` is true in the delegation context (from `--clean` command flag).
+
+```bash
+# Check clean_flag
+if [ "$clean_flag" != "true" ]; then
+  memory_context=$(bash .claude/scripts/memory-retrieve.sh "$description" "$task_type" "$focus_prompt" 2>/dev/null) || memory_context=""
+fi
+
+# memory_context will be empty string if:
+# - clean_flag is true (skipped)
+# - memory-index.json missing or empty
+# - no keywords matched any entries
+# - script exited with error
+```
+
+If `memory_context` is non-empty, it will be injected into the Stage 5 prompt alongside the format specification from Stage 4b. If empty, no memory block is injected.
+
+---
+
+### Stage 4c: Roadmap Consultation (Auto)
+
+Read the project roadmap to inject strategic context into the research agent prompt.
+
+**Skip if**: `clean_flag` is true in the delegation context (from `--clean` command flag).
+
+```bash
+# Check clean_flag (same gate as memory retrieval)
+roadmap_context=""
+if [ "$clean_flag" != "true" ]; then
+  roadmap_file="specs/ROADMAP.md"
+  if [ -f "$roadmap_file" ]; then
+    roadmap_context=$(cat "$roadmap_file")
+  fi
+fi
+
+# roadmap_context will be empty string if:
+# - clean_flag is true (skipped)
+# - specs/ROADMAP.md does not exist
+# - file is empty
+```
+
+If `roadmap_context` is non-empty, it will be injected into the Stage 5 prompt as a tagged block. If empty, no roadmap block is injected.
+
+**Note**: If ROADMAP.md grows beyond ~100 lines, consider adding a size-check threshold and summarizing before injection.
+
+---
+
+### Stage 4d: Collect Prior Implementation Context
+
+If task status is "implementing" or "partial", collect existing implementation artifacts from the task directory and prepare them for injection into the subagent prompt.
+
+```bash
+prior_implementation_context=""
+
+if [ "$status" = "implementing" ] || [ "$status" = "partial" ]; then
+    task_dir="specs/${padded_num}_${project_name}"
+
+    # 1. Implementation summaries (highest priority)
+    if [ -d "$task_dir/summaries" ]; then
+        for f in $(ls -1 "$task_dir/summaries/"*.md 2>/dev/null | sort -V); do
+            prior_implementation_context+="\n\n## Summary: $(basename "$f")\n\n$(cat "$f")"
+        done
+    fi
+
+    # 2. Handoff documents
+    if [ -d "$task_dir/handoffs" ]; then
+        for f in $(ls -1 "$task_dir/handoffs/"*.md 2>/dev/null | sort -V | tail -3); do
+            prior_implementation_context+="\n\n## Handoff: $(basename "$f")\n\n$(cat "$f")"
+        done
+    fi
+
+    # 3. Progress files
+    if [ -d "$task_dir/progress" ]; then
+        for f in $(ls -1 "$task_dir/progress/"*.json 2>/dev/null | sort -V | tail -1); do
+            prior_implementation_context+="\n\n## Progress: $(basename "$f")\n\n$(cat "$f")"
+        done
+    fi
+
+    # 4. Latest plan
+    if [ -d "$task_dir/plans" ]; then
+        latest_plan=$(ls -1 "$task_dir/plans/"*.md 2>/dev/null | sort -V | tail -1)
+        if [ -n "$latest_plan" ]; then
+            prior_implementation_context+="\n\n## Plan: $(basename "$latest_plan")\n\n$(cat "$latest_plan")"
+        fi
+    fi
+
+    # Truncate if exceeds 500 lines
+    if [ -n "$prior_implementation_context" ]; then
+        line_count=$(echo -e "$prior_implementation_context" | wc -l)
+        if [ "$line_count" -gt 500 ]; then
+            prior_implementation_context=$(echo -e "$prior_implementation_context" | head -n 500)
+            prior_implementation_context+="\n\n[NOTE: Prior implementation context truncated from $line_count lines to 500 lines budget]"
+        fi
+    fi
+fi
+```
+
+If no artifacts are found or status does not match, `prior_implementation_context` remains an empty string.
+
+---
+
 ### Stage 4: Prepare Delegation Context
 
 Prepare delegation context for the subagent:
@@ -121,12 +240,33 @@ Prepare delegation context for the subagent:
     "task_number": N,
     "task_name": "{project_name}",
     "description": "{description}",
-    "language": "{language}"
+    "task_type": "{task_type}"
   },
+  "artifact_number": "{artifact_number from Stage 3a}",
   "focus_prompt": "{optional focus}",
-  "metadata_file_path": "specs/{NNN}_{SLUG}/.return-meta.json"
+  "effort_flag": "{effort_flag from command, null if not set}",
+  "model_flag": "{model_flag from command, null if not set}",
+  "roadmap_path": "specs/ROADMAP.md",
+  "metadata_file_path": "specs/{NNN}_{SLUG}/.return-meta.json",
+  "prior_implementation_context": "{prior_implementation_context from Stage 4d, or empty string}"
 }
 ```
+
+**Note**: The `artifact_number` field tells the agent which sequence number to use for artifact naming (e.g., `01`, `02`).
+
+**Model/Effort Flags**: If `model_flag` is set (haiku, sonnet, opus), pass it as the `model` parameter on the Task tool to override the agent's frontmatter default. If `effort_flag` is set (fast, hard), include it as prompt context for reasoning depth guidance.
+
+---
+
+### Stage 4b: Read and Inject Format Specification
+
+Read the report format file and prepare it for injection into the subagent prompt. This ensures the subagent always has the full format specification in its context, regardless of whether it reads the file itself.
+
+```bash
+format_content=$(cat .claude/context/formats/report-format.md)
+```
+
+The format content will be included as a delimited section in the Stage 5 prompt (see below).
 
 ---
 
@@ -139,9 +279,59 @@ Prepare delegation context for the subagent:
 Tool: Task (NOT Skill)
 Parameters:
   - subagent_type: "general-research-agent"
-  - prompt: [Include task_context, delegation_context, focus_prompt, metadata_file_path]
+  - prompt: [Include task_context, delegation_context, focus_prompt, metadata_file_path,
+             AND the format specification from Stage 4b as shown below]
   - description: "Execute research for task {N}"
 ```
+
+**Format Injection**: Include the format specification from Stage 4b in the prompt as a clearly-delimited section:
+
+```
+<artifact-format-specification>
+## CRITICAL: Report Format Requirements
+
+You MUST follow this format specification exactly when writing the research report.
+Non-compliance will be caught by postflight validation.
+
+{format_content from Stage 4b}
+</artifact-format-specification>
+```
+
+Place this section AFTER the delegation context JSON and BEFORE any other instructions.
+
+**Prior Implementation Context Injection**: If `prior_implementation_context` from Stage 4d is non-empty, include it in the prompt as a separate block:
+
+```
+<prior-implementation-context>
+## Prior Implementation Context (auto-injected)
+
+The following artifacts were found for this task. Use this context to avoid redundant research. Do NOT re-read the files listed below; use the injected content directly.
+
+{prior_implementation_context from Stage 4d}
+</prior-implementation-context>
+```
+
+Place the prior implementation context block AFTER the format specification and BEFORE the memory context block. Do NOT inject an empty `<prior-implementation-context>` block when no prior artifacts were found.
+
+**Memory Context Injection**: If `memory_context` from Stage 4a is non-empty, include it in the prompt as a separate block:
+
+```
+{memory_context from Stage 4a -- already wrapped in <memory-context> tags}
+```
+
+Place the memory context block AFTER the prior implementation context and BEFORE the roadmap context block. Do NOT inject an empty `<memory-context>` block when no memories were retrieved.
+
+**Roadmap Context Injection**: If `roadmap_context` from Stage 4c is non-empty, include it in the prompt as a separate block:
+
+```
+<roadmap-context>
+## Project Roadmap (auto-injected, read-only)
+
+{roadmap_context from Stage 4c}
+</roadmap-context>
+```
+
+Place the roadmap context block AFTER the `<memory-context>` block and BEFORE the task-specific instructions. Do NOT inject an empty `<roadmap-context>` block when no roadmap was read.
 
 **DO NOT** use `Skill(general-research-agent)` - this will FAIL.
 
@@ -155,9 +345,25 @@ The subagent will:
 
 ---
 
+### Stage 5b: Self-Execution Fallback
+
+**CRITICAL**: If you performed the work above WITHOUT using the Task tool (i.e., you read files,
+wrote artifacts, or updated metadata directly instead of spawning a subagent), you MUST write a
+`.return-meta.json` file now before proceeding to postflight. Use the schema from
+`return-metadata-file.md` with status value `"researched"` and the appropriate artifact information.
+
+If you DID use the Task tool (Stage 5), skip this stage -- the subagent already wrote the metadata.
+
+---
+
+## Postflight (ALWAYS EXECUTE)
+
+The following stages MUST execute after work is complete, whether the work was done by a
+subagent (Stage 5) or inline (Stage 5b). Do NOT skip these stages for any reason.
+
 ### Stage 6: Parse Subagent Return (Read Metadata File)
 
-After subagent returns, read the metadata file:
+Read the metadata file:
 
 ```bash
 metadata_file="specs/${padded_num}_${project_name}/.return-meta.json"
@@ -167,6 +373,7 @@ if [ -f "$metadata_file" ] && jq empty "$metadata_file" 2>/dev/null; then
     artifact_path=$(jq -r '.artifacts[0].path // ""' "$metadata_file")
     artifact_type=$(jq -r '.artifacts[0].type // ""' "$metadata_file")
     artifact_summary=$(jq -r '.artifacts[0].summary // ""' "$metadata_file")
+    memory_candidates=$(jq -c '.memory_candidates // []' "$metadata_file")
 else
     echo "Error: Invalid or missing metadata file"
     status="failed"
@@ -175,24 +382,60 @@ fi
 
 ---
 
-### Stage 7: Update Task Status (Postflight)
+### Stage 6a: Validate Artifact Content
 
-If status is "researched", update state.json and TODO.md:
+If subagent status is "researched" and `artifact_path` is non-empty, validate the report artifact against format requirements. This is **non-blocking** -- warnings are logged but do not prevent postflight from completing.
 
-**Update state.json**:
 ```bash
-jq --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-   --arg status "researched" \
-  '(.active_projects[] | select(.project_number == '$task_number')) |= . + {
-    status: $status,
-    last_updated: $ts,
-    researched: $ts
-  }' specs/state.json > /tmp/state.json && mv /tmp/state.json specs/state.json
+if [ "$status" = "researched" ] && [ -n "$artifact_path" ] && [ -f "$artifact_path" ]; then
+    echo "Validating report artifact..."
+    if ! bash .claude/scripts/validate-artifact.sh "$artifact_path" report --fix; then
+        echo "WARNING: Report artifact has format issues (non-blocking). Review output above."
+    fi
+fi
 ```
 
-**Update TODO.md**: Use Edit tool to change status marker from `[RESEARCHING]` to `[RESEARCHED]`.
+**Note**: The `--fix` flag attempts auto-repair of missing metadata fields. Validation failures are logged but do not block status update or git commit.
 
-**On partial/failed**: Keep status as "researching" for resume.
+---
+
+### Stage 7: Update Task Status (Postflight)
+
+If status is "researched", update status and increment artifact number:
+
+```bash
+# Step 1: Update status (state.json, TODO.md task entry, TODO.md Task Order)
+if [ "$status" = "researched" ]; then
+  .claude/scripts/update-task-status.sh postflight "$task_number" research "$session_id"
+fi
+
+# Step 2: Increment next_artifact_number (research advances the sequence)
+jq '(.active_projects[] | select(.project_number == '$task_number')).next_artifact_number =
+    (((.active_projects[] | select(.project_number == '$task_number')).next_artifact_number // 1) + 1)' \
+  specs/state.json > specs/tmp/state.json && mv specs/tmp/state.json specs/state.json
+```
+
+**Note**: Research is the only operation that increments `next_artifact_number`. Plan and implement use `(current - 1)` to stay in the same "round".
+
+**On partial/failed**: Keep status as "researching" for resume (do not call the script).
+
+---
+
+### Stage 7a: Propagate Memory Candidates
+
+If the agent emitted memory candidates, append them to the task's state.json entry using append semantics (merge with any existing candidates from prior operations).
+
+```bash
+if [ "$memory_candidates" != "[]" ] && [ -n "$memory_candidates" ]; then
+    # Append new candidates to existing array (append semantics, not overwrite)
+    jq --argjson new_candidates "$memory_candidates" \
+      '(.active_projects[] | select(.project_number == '$task_number')).memory_candidates =
+        ((.active_projects[] | select(.project_number == '$task_number')).memory_candidates // []) + $new_candidates' \
+      specs/state.json > specs/tmp/state.json && mv specs/tmp/state.json specs/state.json
+fi
+```
+
+**Note**: Uses `// []` fallback so this works whether or not the task already has candidates. Append semantics ensure research and implementation candidates coexist.
 
 ---
 
@@ -207,40 +450,28 @@ if [ -n "$artifact_path" ]; then
     # Step 1: Filter out existing research artifacts (use "| not" pattern to avoid != escaping - Issue #1132)
     jq '(.active_projects[] | select(.project_number == '$task_number')).artifacts =
         [(.active_projects[] | select(.project_number == '$task_number')).artifacts // [] | .[] | select(.type == "research" | not)]' \
-      specs/state.json > /tmp/state.json && mv /tmp/state.json specs/state.json
+      specs/state.json > specs/tmp/state.json && mv specs/tmp/state.json specs/state.json
 
     # Step 2: Add new research artifact
     jq --arg path "$artifact_path" \
        --arg type "$artifact_type" \
        --arg summary "$artifact_summary" \
       '(.active_projects[] | select(.project_number == '$task_number')).artifacts += [{"path": $path, "type": $type, "summary": $summary}]' \
-      specs/state.json > /tmp/state.json && mv /tmp/state.json specs/state.json
+      specs/state.json > specs/tmp/state.json && mv specs/tmp/state.json specs/state.json
 fi
 ```
 
-**Update TODO.md**: Add research artifact link:
-```markdown
-- **Research**: [research-{NNN}.md]({artifact_path})
-```
-
----
-
-### Stage 9: Git Commit
-
-Commit changes with session ID:
+**Link artifact in TODO.md**: Use the `link-artifact-todo.sh` script (REQUIRED -- do NOT manually edit artifact links in TODO.md):
 
 ```bash
-git add -A
-git commit -m "task ${task_number}: complete research
-
-Session: ${session_id}
-
-Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
+bash .claude/scripts/link-artifact-todo.sh $task_number '**Research**' '**Plan**' "$artifact_path"
 ```
+
+The script produces bracket-only `[path]` format. Never use markdown `[name](path)` format for artifact links. If the script exits non-zero, log a warning but continue (linking errors are non-blocking).
 
 ---
 
-### Stage 10: Cleanup
+### Stage 9: Cleanup
 
 Remove marker and metadata files:
 
@@ -252,7 +483,7 @@ rm -f "specs/${padded_num}_${project_name}/.return-meta.json"
 
 ---
 
-### Stage 11: Return Brief Summary
+### Stage 10: Return Brief Summary
 
 Return a brief text summary (NOT JSON). Example:
 
@@ -260,9 +491,8 @@ Return a brief text summary (NOT JSON). Example:
 Research completed for task {N}:
 - Found {count} relevant patterns and resources
 - Identified implementation approach: {approach}
-- Created report at specs/{NNN}_{SLUG}/reports/research-{NNN}.md
+- Created report at specs/{NNN}_{SLUG}/reports/MM_{short-slug}.md
 - Status updated to [RESEARCHED]
-- Changes committed
 ```
 
 ---
@@ -278,12 +508,30 @@ If subagent didn't write metadata file:
 2. Do not cleanup postflight marker
 3. Report error to user
 
-### Git Commit Failure
-Non-blocking: Log failure but continue with success response.
-
 ### Subagent Timeout
 Return partial status if subagent times out (default 3600s).
 Keep status as "researching" for resume.
+
+---
+
+## MUST NOT (Postflight Boundary)
+
+After the agent returns, this skill MUST NOT:
+
+1. **Edit source files** - All research work is done by agent
+2. **Run build/test commands** - Verification is done by agent
+3. **Use MCP/WebSearch tools** - Research tools are for agent use only
+4. **Analyze or grep source** - Analysis is agent work
+5. **Write reports** - Artifact creation is agent work
+
+The postflight phase is LIMITED TO:
+- Reading agent metadata file
+- Calling `update-task-status.sh` for status updates (state.json + TODO.md)
+- Incrementing `next_artifact_number` via jq
+- Linking artifacts in state.json
+- Cleanup of temp/marker files
+
+Reference: @.claude/context/standards/postflight-tool-restrictions.md
 
 ---
 
@@ -296,9 +544,8 @@ Example successful return:
 Research completed for task 412:
 - Found 8 relevant patterns for implementation
 - Identified lazy context loading and skill-to-agent mapping patterns
-- Created report at specs/412_general_research/reports/research-001.md
+- Created report at specs/412_general_research/reports/MM_{short-slug}.md
 - Status updated to [RESEARCHED]
-- Changes committed with session sess_1736700000_abc123
 ```
 
 Example partial return:
@@ -306,6 +553,6 @@ Example partial return:
 Research partially completed for task 412:
 - Found 4 codebase patterns
 - Web search failed due to network error
-- Partial report created at specs/412_general_research/reports/research-001.md
+- Partial report created at specs/412_general_research/reports/MM_{short-slug}.md
 - Status remains [RESEARCHING] - run /research 412 to continue
 ```

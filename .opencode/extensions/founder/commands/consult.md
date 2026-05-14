@@ -1,0 +1,224 @@
+---
+description: Collaborative design consultation with domain expert perspective
+allowed-tools: Skill, Bash(jq:*), Bash(git:*), Bash(date:*), Read, Edit, AskUserQuestion
+argument-hint: --legal [file_path|"text"|design question]
+---
+
+# /consult Command
+
+Collaborative design consultation command that routes to domain-specific design partner agents.
+
+## Overview
+
+This command initiates a collaborative consultation where a design partner agent helps the user describe their product in language that domain professionals recognize. Unlike review or critique commands, `/consult` uses Socratic dialogue to understand user intent and suggest reframings -- it is collaborative, not adversarial.
+
+The command operates in **standalone immediate-mode** -- no task pipeline required. It can optionally be attached to an existing task for artifact tracking.
+
+## Syntax
+
+- `/consult --legal /path/to/document.typ` - Review document from attorney perspective
+- `/consult --legal "product description text"` - Analyze inline text from attorney perspective
+- `/consult --legal How should I describe formal verification to attorneys?` - Design question dialogue
+- `/consult --legal 458` - Attach consultation to existing task (artifacts stored in task directory)
+
+## Domain Flags
+
+| Flag | Agent | Domain | Status |
+|------|-------|--------|--------|
+| `--legal` | legal-analysis-agent | Attorney perspective on legal AI product descriptions | Available |
+| `--investor` | (future) | Investor perspective on pitch materials | Planned |
+| `--technical` | (future) | Technical architecture review | Planned |
+| `--competitor` | (future) | Competitive positioning review | Planned |
+
+**Note**: Only `--legal` is implemented. Other flags are documented for future extensibility.
+
+## Input Types
+
+| Input | Behavior |
+|-------|----------|
+| File path (after flag) | Read file as document for translation analysis |
+| Quoted string (after flag) | Treat as inline product description snippet |
+| Task number (after flag) | Attach consultation to existing task, store artifacts in task directory |
+| Bare text (after flag) | Treat as design question for Socratic dialogue |
+
+---
+
+## CHECKPOINT 1: GATE IN
+
+**Display header**:
+```
+[Consult] Collaborative Design Consultation
+```
+
+### Step 1: Generate Session ID
+
+```bash
+session_id="sess_$(date +%s)_$(od -An -N3 -tx1 /dev/urandom | tr -d ' ')"
+```
+
+### Step 2: Parse Flag and Input
+
+```bash
+# Extract domain flag
+if echo "$ARGUMENTS" | grep -qE '^--legal'; then
+  domain="legal"
+  args=$(echo "$ARGUMENTS" | sed 's/^--legal *//')
+elif echo "$ARGUMENTS" | grep -qE '^--investor'; then
+  echo "Error: --investor flag is not yet implemented"
+  exit 1
+elif echo "$ARGUMENTS" | grep -qE '^--technical'; then
+  echo "Error: --technical flag is not yet implemented"
+  exit 1
+elif echo "$ARGUMENTS" | grep -qE '^--competitor'; then
+  echo "Error: --competitor flag is not yet implemented"
+  exit 1
+else
+  echo "Error: Domain flag required. Use --legal, e.g.: /consult --legal /path/to/document.md"
+  exit 1
+fi
+```
+
+### Step 3: Detect Input Type
+
+```bash
+# Check for task number
+if echo "$args" | grep -qE '^[0-9]+$'; then
+  input_type="task_number"
+  task_number="$args"
+
+# Check for file path
+elif echo "$args" | grep -qE '^\.|^/|^~|\.md$|\.txt$|\.typ$|\.pdf$'; then
+  input_type="file_path"
+  file_path=$(eval echo "$args")
+  if [ ! -f "$file_path" ]; then
+    echo "Error: File not found: $file_path"
+    exit 1
+  fi
+
+# Check for quoted string
+elif echo "$args" | grep -qE '^".*"$'; then
+  input_type="inline_text"
+  inline_text=$(echo "$args" | sed 's/^"//;s/"$//')
+
+# Default: bare text is a design question
+else
+  input_type="design_question"
+  design_question="$args"
+fi
+```
+
+### Step 4: Resolve Task Context (if task number)
+
+```bash
+if [ "$input_type" = "task_number" ]; then
+  task_data=$(jq -r --argjson num "$task_number" \
+    '.active_projects[] | select(.project_number == $num)' \
+    specs/state.json)
+
+  if [ -z "$task_data" ]; then
+    echo "Error: Task $task_number not found"
+    exit 1
+  fi
+
+  project_name=$(echo "$task_data" | jq -r '.project_name')
+  description=$(echo "$task_data" | jq -r '.description // ""')
+fi
+```
+
+---
+
+## STAGE 2: DELEGATE
+
+Route to the appropriate design partner agent based on domain flag.
+
+### Legal Domain (--legal)
+
+Invoke skill-consult with legal routing:
+
+```
+skill: "skill-consult"
+args: "domain=legal input_type={input_type} file_path={file_path} inline_text={inline_text} design_question={design_question} task_number={task_number} session_id={session_id}"
+```
+
+The skill-consult wrapper will:
+1. Spawn legal-analysis-agent via Task tool
+2. Pass delegation context including input type and content
+3. Agent conducts Socratic dialogue and produces consultation report
+4. Skill handles postflight (artifact linking if task-attached)
+
+---
+
+## CHECKPOINT 2: GATE OUT
+
+### Step 1: Display Result
+
+```
+Legal design consultation complete.
+
+Input: {file path or description}
+Translation gaps found: {N}
+Consultation report: {report_path}
+
+Top recommendation: {highest priority reframing}
+
+Advisory: This consultation models attorney thinking but does not replace attorney review.
+Recommend professional review for materials targeting legal professionals in high-stakes contexts.
+```
+
+### Step 2: Git Commit (if task-attached)
+
+```bash
+if [ -n "$task_number" ]; then
+  git add -A
+  git commit -m "task ${task_number}: legal design consultation
+
+Session: ${session_id}
+"
+fi
+```
+
+---
+
+## Error Handling
+
+### Missing Domain Flag
+
+```
+Error: Domain flag required.
+Usage: /consult --legal [file_path|"text"|design question]
+
+Available domains: --legal
+Coming soon: --investor, --technical, --competitor
+```
+
+### File Not Found
+
+```
+Error: File not found: {path}
+Verify the file path and try again.
+```
+
+### Unimplemented Domain
+
+```
+Error: --{domain} flag is not yet implemented.
+Currently available: --legal
+```
+
+---
+
+## Examples
+
+```bash
+# Review a product document from attorney perspective
+/consult --legal ~/Projects/Logos/Vision/shared/strategy/legal-ai-example.typ
+
+# Analyze a product description snippet
+/consult --legal "Logos formally verifies all legal reasoning and discovers concealment patterns"
+
+# Ask a design question
+/consult --legal How should I describe formal verification to litigation partners?
+
+# Attach consultation to an existing task
+/consult --legal 458
+```

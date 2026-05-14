@@ -1,0 +1,191 @@
+{
+  "entries": [
+    {
+      "path": "project/nix/README.md",
+      "description": "Nix context overview with directory structure and loading strategy",
+      "load_when": {
+        "agents": [
+          "nix-research-agent",
+          "nix-implementation-agent"
+        ],
+        "languages": [
+          "nix"
+        ]
+      },
+      "line_count": 100,
+      "domain": "project",
+      "subdomain": "nix",
+      "summary": "Nix context overview with directory structure and loading strategy"
+    },
+    {
+      "path": "project/nix/domain/nix-language.md",
+      "description": "Nix expression language syntax and builtins reference",
+      "load_when": {
+        "agents": [
+          "nix-research-agent",
+          "nix-implementation-agent"
+        ],
+        "languages": [
+          "nix"
+        ]
+      },
+      "line_count": 150,
+      "domain": "project",
+      "subdomain": "nix",
+      "summary": "Nix expression language syntax and builtins reference"
+    },
+    {
+      "path": "project/nix/domain/flakes.md",
+      "description": "Nix flake structure, inputs, outputs, and lockfile management",
+      "load_when": {
+        "agents": [
+          "nix-research-agent",
+          "nix-implementation-agent"
+        ],
+        "languages": [
+          "nix"
+        ]
+      },
+      "line_count": 180,
+      "domain": "project",
+      "subdomain": "nix",
+      "summary": "Nix flake structure, inputs, outputs, and lockfile management"
+    },
+    {
+      "path": "project/nix/domain/nixos-modules.md",
+      "description": "NixOS module system with options, config, and imports",
+      "load_when": {
+        "agents": [
+          "nix-research-agent",
+          "nix-implementation-agent"
+        ],
+        "languages": [
+          "nix"
+        ]
+      },
+      "line_count": 170,
+      "domain": "project",
+      "subdomain": "nix",
+      "summary": "NixOS module system with options, config, and imports"
+    },
+    {
+      "path": "project/nix/domain/home-manager.md",
+      "description": "Home Manager user-level configuration and module patterns",
+      "load_when": {
+        "agents": [
+          "nix-research-agent",
+          "nix-implementation-agent"
+        ],
+        "languages": [
+          "nix"
+        ]
+      },
+      "line_count": 160,
+      "domain": "project",
+      "subdomain": "nix",
+      "summary": "Home Manager user-level configuration and module patterns"
+    },
+    {
+      "path": "project/nix/patterns/module-patterns.md",
+      "description": "NixOS and Home Manager module definition patterns",
+      "load_when": {
+        "agents": [
+          "nix-research-agent",
+          "nix-implementation-agent"
+        ],
+        "languages": [
+          "nix"
+        ]
+      },
+      "line_count": 140,
+      "domain": "project",
+      "subdomain": "nix",
+      "summary": "NixOS and Home Manager module definition patterns"
+    },
+    {
+      "path": "project/nix/patterns/overlay-patterns.md",
+      "description": "Nixpkgs overlay patterns for package customization",
+      "load_when": {
+        "agents": [
+          "nix-research-agent",
+          "nix-implementation-agent"
+        ],
+        "languages": [
+          "nix"
+        ]
+      },
+      "line_count": 130,
+      "domain": "project",
+      "subdomain": "nix",
+      "summary": "Nixpkgs overlay patterns for package customization"
+    },
+    {
+      "path": "project/nix/patterns/derivation-patterns.md",
+      "description": "Nix derivation and package building patterns",
+      "load_when": {
+        "agents": [
+          "nix-research-agent",
+          "nix-implementation-agent"
+        ],
+        "languages": [
+          "nix"
+        ]
+      },
+      "line_count": 160,
+      "domain": "project",
+      "subdomain": "nix",
+      "summary": "Nix derivation and package building patterns"
+    },
+    {
+      "path": "project/nix/standards/nix-style-guide.md",
+      "description": "Nix code formatting and naming conventions",
+      "load_when": {
+        "agents": [
+          "nix-research-agent",
+          "nix-implementation-agent"
+        ],
+        "languages": [
+          "nix"
+        ]
+      },
+      "line_count": 150,
+      "domain": "project",
+      "subdomain": "nix",
+      "summary": "Nix code formatting and naming conventions"
+    },
+    {
+      "path": "project/nix/tools/nixos-rebuild-guide.md",
+      "description": "NixOS system rebuild commands and workflows",
+      "load_when": {
+        "agents": [
+          "nix-research-agent",
+          "nix-implementation-agent"
+        ],
+        "languages": [
+          "nix"
+        ]
+      },
+      "line_count": 120,
+      "domain": "project",
+      "subdomain": "nix",
+      "summary": "NixOS system rebuild commands and workflows"
+    },
+    {
+      "path": "project/nix/tools/home-manager-guide.md",
+      "description": "Home Manager CLI commands and configuration workflows",
+      "load_when": {
+        "agents": [
+          "nix-research-agent",
+          "nix-implementation-agent"
+        ],
+        "languages": [
+          "nix"
+        ]
+      },
+      "line_count": 130,
+      "domain": "project",
+      "subdomain": "nix",
+      "summary": "Home Manager CLI commands and configuration workflows"
+    }
+  ]
+}

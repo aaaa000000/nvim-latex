@@ -1,0 +1,63 @@
+{
+  "name": "epidemiology",
+  "version": "2.0.0",
+  "description": "Epidemiology research extension for R and related tooling. Provides agents, skills, and context for study design, statistical modeling, causal inference, and Bayesian analysis.",
+  "task_type": "epi",
+  "dependencies": [
+    "core"
+  ],
+  "provides": {
+    "agents": [
+      "epi-research-agent.md",
+      "epi-implement-agent.md"
+    ],
+    "skills": [
+      "skill-epi-research",
+      "skill-epi-implement"
+    ],
+    "context": [
+      "project/epidemiology"
+    ],
+    "commands": [
+      "epi.md"
+    ],
+    "scripts": [],
+    "rules": []
+  },
+  "routing": {
+    "research": {
+      "epi": "skill-epi-research",
+      "epi:study": "skill-epi-research",
+      "epidemiology": "skill-epi-research"
+    },
+    "plan": {
+      "epi": "skill-planner",
+      "epi:study": "skill-planner",
+      "epidemiology": "skill-planner"
+    },
+    "implement": {
+      "epi": "skill-epi-implement",
+      "epi:study": "skill-epi-implement",
+      "epidemiology": "skill-epi-implement"
+    }
+  },
+  "merge_targets": {
+    "claudemd": {
+      "source": "EXTENSION.md",
+      "target": ".claude/CLAUDE.md",
+      "section_id": "extension_epidemiology"
+    },
+    "index": {
+      "source": "index-entries.json",
+      "target": ".claude/context/index.json"
+    },
+    "settings": {
+      "source": "settings-fragment.json",
+      "target": ".claude/settings.local.json"
+    },
+    "opencode_json": {
+      "source": "opencode-agents.json",
+      "target": "opencode.json"
+    }
+  }
+}

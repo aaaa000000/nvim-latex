@@ -1,62 +1,12 @@
 {
-  "next_project_number": 90,
+  "version": "1.0.0",
+  "next_project_number": 557,
   "active_projects": [
-    {
-      "project_number": 89,
-      "project_name": "gmail_himalaya_folder_label_sync",
-      "status": "planned",
-      "language": "neovim",
-      "created": "2026-02-13T22:03:59Z",
-      "last_updated": "2026-02-13T22:13:40Z",
-      "session_id": "sess_1771020682_ef225a",
-      "artifacts": [
-        {
-          "type": "research",
-          "path": "specs/089_gmail_himalaya_folder_label_sync/reports/research-001.md",
-          "summary": "Research report on Gmail-Himalaya folder/label synchronization, covering bidirectional sync behavior, mbsync configuration, and Himalaya folder commands"
-        },
-        {
-          "type": "plan",
-          "path": "specs/089_gmail_himalaya_folder_label_sync/plans/implementation-001.md",
-          "summary": "Implementation plan for mbsyncrc bidirectional sync configuration"
-        }
-      ],
-      "planned": "2026-02-13T22:13:40Z"
-    },
-    {
-      "project_number": 88,
-      "project_name": "simplify_himalaya_threading_keybindings",
-      "status": "completed",
-      "language": "neovim",
-      "created": "2026-02-13T21:58:35Z",
-      "last_updated": "2026-02-13T22:11:38Z",
-      "session_id": "sess_1771020462_b1cca1",
-      "artifacts": [
-        {
-          "type": "research",
-          "path": "specs/088_simplify_himalaya_threading_keybindings/reports/research-001.md",
-          "summary": "Research report with implementation approach for simplifying himalaya threading keybindings"
-        },
-        {
-          "path": "specs/088_simplify_himalaya_threading_keybindings/plans/implementation-001.md",
-          "type": "plan",
-          "summary": "Implementation plan for simplifying threading keybindings to Tab and S-Tab"
-        },
-        {
-          "path": "specs/088_simplify_himalaya_threading_keybindings/summaries/implementation-summary-20260213.md",
-          "type": "summary",
-          "summary": "Implementation summary for simplified threading keybindings"
-        }
-      ],
-      "planned": "2026-02-13T22:06:39Z",
-      "completed": "2026-02-13T22:11:38Z",
-      "completion_summary": "Simplified himalaya sidebar threading keybindings from 6 keys (Tab, zo, zc, zR, zM, gT) to 2 keys (Tab for single thread, S-Tab for all threads). Added intelligent toggle_all_threads() function that collapses all if any expanded, else expands all."
-    },
     {
       "project_number": 87,
       "project_name": "investigate_wezterm_terminal_directory_change",
       "status": "researched",
-      "language": "neovim",
+      "task_type": "neovim",
       "created": "2026-02-13T21:37:24Z",
       "last_updated": "2026-02-13T21:42:25Z",
       "session_id": "sess_1771018686_143ebc",
@@ -69,39 +19,10 @@
       ]
     },
     {
-      "project_number": 86,
-      "project_name": "fix_himalaya_sent_and_sidebar_keybindings",
-      "status": "completed",
-      "language": "neovim",
-      "created": "2026-02-13T21:33:45Z",
-      "last_updated": "2026-02-13T21:53:16Z",
-      "session_id": "sess_1771019324_34de38",
-      "artifacts": [
-        {
-          "type": "research",
-          "path": "specs/086_fix_himalaya_sent_and_sidebar_keybindings/reports/research-001.md",
-          "summary": "Research report on himalaya sent folder configuration issue and missing sidebar keybindings"
-        },
-        {
-          "path": "specs/086_fix_himalaya_sent_and_sidebar_keybindings/plans/implementation-001.md",
-          "type": "plan",
-          "summary": "Implementation plan covering config documentation, sync_all function, sidebar keybindings, and help menu updates"
-        },
-        {
-          "path": "specs/086_fix_himalaya_sent_and_sidebar_keybindings/summaries/implementation-summary-20260213.md",
-          "type": "summary",
-          "summary": "Implementation summary for himalaya sidebar keybindings and help menu"
-        }
-      ],
-      "planned": "2026-02-13T21:47:16Z",
-      "completed": "2026-02-13T21:53:16Z",
-      "completion_summary": "Documented himalaya sent folder config fix, implemented sync_all() function for HimalayaSyncFull command, added 4 sidebar keybindings (s/S/A/i) for sync and account operations, and updated help menu with new Sync & Accounts and Threading sections."
-    },
-    {
       "project_number": 78,
       "project_name": "fix_himalaya_smtp_authentication_failure",
       "status": "planned",
-      "language": "neovim",
+      "task_type": "neovim",
       "effort": "1-2 hours",
       "created": "2026-02-13T18:01:13Z",
       "last_updated": "2026-02-13T18:10:48Z",
@@ -122,31 +43,199 @@
       "planned": "2026-02-13T18:10:48Z"
     },
     {
-      "project_number": 72,
-      "project_name": "fix_himalaya_sidebar_leader_keybindings_in_help",
-      "status": "not_started",
-      "language": "neovim",
-      "created": "2026-02-12T19:03:20Z",
-      "last_updated": "2026-02-12T19:03:20Z"
+      "project_number": 500,
+      "project_name": "add_context_fork_to_core_skills",
+      "status": "researched",
+      "task_type": "meta",
+      "description": "Investigate and implement context: fork + agent: frontmatter for core delegating skills to enable CLAUDE_CODE_FORK_SUBAGENT=1 cache sharing, following corrected understanding of fork mechanics from official Claude Code docs",
+      "effort": "1-3 hours",
+      "dependencies": [
+        499
+      ],
+      "created": "2026-04-25T20:12:09Z",
+      "last_updated": "2026-04-29T00:22:19Z",
+      "artifacts": [
+        {
+          "path": "specs/500_add_context_fork_to_core_skills/plans/02_add-context-fork-skills.md",
+          "type": "plan",
+          "summary": "Revised plan to investigate and implement context: fork + agent: frontmatter for core delegating skills, enabling FORK_SUBAGENT cache sharing with 4 phases: audit, pilot, rollout, documentation"
+        },
+        {
+          "path": "specs/500_add_context_fork_to_core_skills/reports/04_hybrid-architecture-analysis.md",
+          "type": "research",
+          "summary": "Definitive architecture analysis: hybrid inline-agent approach has no precedent, context: fork + orchestration IS proven (slide skills), cache sharing is fundamentally incompatible with named agent routing, recommend rescoping task 500 to documentation-only"
+        }
+      ],
+      "session_id": "sess_1777421713_7de7e8",
+      "next_artifact_number": 4,
+      "memory_candidates": [
+        {
+          "content": "All loaded extension skills (neovim-research, neovim-implementation, nix-research, nix-implementation) use the same Pattern A delegation as core skills -- explicit Task tool with subagent_type and multi-stage postflight. They do NOT use context: fork or agent: frontmatter. Only unloaded extension skills (e.g., slide-planning, slide-critic) use Pattern B with context: fork.",
+          "category": "INSIGHT",
+          "confidence": 0.9,
+          "suggested_keywords": [
+            "context-fork",
+            "extension-skills",
+            "pattern-a",
+            "pattern-b",
+            "delegation",
+            "thin-wrapper"
+          ]
+        },
+        {
+          "content": "The present extension's skill-slide-planning and skill-slide-critic skills use context: fork + agent: in frontmatter AND explicit subagent_type in their Task call. This proves that context: fork with multi-stage orchestration (preflight, interactive Q&A, delegation, postflight) works correctly.",
+          "category": "PATTERN",
+          "confidence": 0.9,
+          "suggested_keywords": [
+            "context-fork",
+            "skill-orchestration",
+            "slide-planning",
+            "delegation-pattern",
+            "subagent-type"
+          ]
+        },
+        {
+          "content": "Claude Code agent definitions support a skills field that preloads skill content into the subagent context at startup. This is described as the inverse of context: fork.",
+          "category": "TECHNIQUE",
+          "confidence": 0.85,
+          "suggested_keywords": [
+            "skills-field",
+            "agent-preload",
+            "context-fork-inverse",
+            "subagent-skills",
+            "context-injection"
+          ]
+        }
+      ],
+      "plan_metadata": {
+        "phases": 4,
+        "total_effort_hours": 3,
+        "complexity": "medium",
+        "research_integrated": true,
+        "plan_version": 2,
+        "dependency_waves": [
+          [
+            1
+          ],
+          [
+            2
+          ],
+          [
+            3
+          ],
+          [
+            4
+          ]
+        ],
+        "reports_integrated": [
+          {
+            "path": "reports/01_add-context-fork-skills.md",
+            "integrated_in_plan_version": 2,
+            "integrated_date": "2026-04-28"
+          },
+          {
+            "path": "reports/02_web-fork-best-practices.md",
+            "integrated_in_plan_version": 2,
+            "integrated_date": "2026-04-28"
+          }
+        ]
+      }
+    },
+    {
+      "project_number": 501,
+      "project_name": "optimize_team_mode_fork_cache_sharing",
+      "status": "planned",
+      "task_type": "meta",
+      "description": "Optimize team-mode skills (team-research, team-plan, team-implement) to maximize FORK_SUBAGENT parallel cache sharing benefits for teammates 2-N",
+      "effort": "1-3 hours",
+      "dependencies": [
+        499
+      ],
+      "created": "2026-04-25T20:12:09Z",
+      "last_updated": "2026-04-28T22:49:38Z",
+      "artifacts": [
+        {
+          "path": "specs/501_optimize_team_mode_fork_cache_sharing/reports/01_team-mode-fork-cache.md",
+          "type": "research",
+          "summary": "Team-mode skills are already eligible for FORK_SUBAGENT cache sharing; optimization focuses on prompt restructuring, dynamic token multiplier calculation, and cache-aware metadata reporting."
+        },
+        {
+          "path": "specs/501_optimize_team_mode_fork_cache_sharing/plans/01_team-mode-fork-cache.md",
+          "type": "plan",
+          "summary": "4-phase plan to restructure team-mode prompts for FORK_SUBAGENT cache sharing, replace hardcoded token multiplier with dynamic formula, and update documentation"
+        }
+      ],
+      "session_id": "sess_1746493000_f6a1b7",
+      "next_artifact_number": 2,
+      "memory_candidates": [
+        {
+          "content": "TeammateTool spawns in team-mode skills do NOT specify subagent_type, making them eligible for CLAUDE_CODE_FORK_SUBAGENT=1 cache sharing. Teammates 2-N inherit the parent's prompt cache prefix, reducing input token cost by ~90%. Both CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 and CLAUDE_CODE_FORK_SUBAGENT=1 must be enabled. The actual cache benefit depends on the byte-identical shared prefix ratio -- prompts should put shared content first and teammate-specific assignments last to maximize overlap.",
+          "category": "INSIGHT",
+          "confidence": 0.85,
+          "suggested_keywords": [
+            "team-mode",
+            "fork-subagent",
+            "cache-sharing",
+            "token-cost",
+            "prompt-prefix",
+            "TeammateTool"
+          ]
+        },
+        {
+          "content": "skill-team-research hardcodes team_size=4 in Stage 1 regardless of user-provided --team-size flag. The four fixed roles are: Primary (A), Alternatives (B), Critic (C), Horizons (D). The token_usage_multiplier is hardcoded at 5.0 in all team skill metadata but should be dynamically calculated.",
+          "category": "PATTERN",
+          "confidence": 0.75,
+          "suggested_keywords": [
+            "team-research",
+            "team-size",
+            "token-multiplier",
+            "hardcoded",
+            "metadata"
+          ]
+        }
+      ],
+      "plan_metadata": {
+        "phases": 4,
+        "total_effort_hours": 3,
+        "complexity": "medium",
+        "research_integrated": true,
+        "plan_version": 1,
+        "dependency_waves": [
+          [
+            1
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            4
+          ]
+        ],
+        "reports_integrated": [
+          {
+            "path": "reports/01_team-mode-fork-cache.md",
+            "integrated_in_plan_version": 1,
+            "integrated_date": "2026-04-28"
+          }
+        ]
+      }
     }
   ],
+  "completed_projects": [],
   "repository_health": {
-    "last_assessed": "2026-02-13T21:00:26Z",
+    "last_assessed": "2026-05-12T21:21:50Z",
     "todo_count": 44,
     "fixme_count": 2,
     "build_errors": 0,
     "status": "healthy"
   },
-  "artifacts": [
-    {
-      "path": "specs/052_protonmail_bridge_systemd_autostart/reports/research-001.md",
-      "type": "research",
-      "summary": "Research on systemd user service configuration for ProtonMail Bridge auto-start, covering best practices, home-manager integration patterns, and implementation recommendations"
-    },
-    {
-      "path": "specs/052_protonmail_bridge_systemd_autostart/plans/implementation-001.md",
-      "type": "plan",
-      "summary": "4-phase plan covering service verification, integration testing, and documentation for ProtonMail Bridge systemd user service"
-    }
-  ]
+  "memory_health": {
+    "last_distilled": null,
+    "distill_count": 0,
+    "total_memories": 3,
+    "never_retrieved": 2,
+    "health_score": 100,
+    "status": "healthy"
+  }
 }

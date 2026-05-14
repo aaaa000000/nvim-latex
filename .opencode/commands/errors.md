@@ -1,8 +1,10 @@
 ---
 description: Analyze errors and create fix plans
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash(git:*), TodoWrite, Task, Read(/tmp/*.json), Bash(rm:*)
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash(git:*), TaskCreate, TaskUpdate, Task
 argument-hint: [--fix TASK_NUMBER]
 ---
+
+> **COMMAND EXECUTION MODE** — You have been invoked as this command with arguments: `$ARGUMENTS`. Execute the workflow below immediately. Do not summarize this file, ask what to do with it, or describe its contents. Start execution now.
 
 # /errors Command
 
@@ -18,7 +20,6 @@ Analyze errors.json, identify patterns, and create fix plans.
 ### 1. Load Error Data
 
 Read specs/errors.json:
-
 ```json
 {
   "errors": [
@@ -44,14 +45,12 @@ Read specs/errors.json:
 ### 2. Analyze Patterns
 
 Group errors by:
-
 - **Type**: delegation_hang, timeout, build_error, etc.
 - **Severity**: critical, high, medium, low
 - **Recurrence**: How often each error repeats
 - **Context**: Which commands/agents trigger them
 
 Identify:
-
 - Most frequent error types
 - Highest severity unfixed errors
 - Patterns suggesting root causes
@@ -71,17 +70,16 @@ Write to `specs/errors/analysis-{DATE}.md`:
 
 ## Summary by Type
 
-| Type            | Count | Unfixed | Severity |
-| --------------- | ----- | ------- | -------- |
-| delegation_hang | {N}   | {N}     | high     |
-| timeout         | {N}   | {N}     | medium   |
-| build_error     | {N}   | {N}     | high     |
+| Type | Count | Unfixed | Severity |
+|------|-------|---------|----------|
+| delegation_hang | {N} | {N} | high |
+| timeout | {N} | {N} | medium |
+| build_error | {N} | {N} | high |
 
 ## Critical Errors (Unfixed)
 
 ### {Error Type}: {Message}
-
-**ID**: err\_{N}
+**ID**: err_{N}
 **Occurrences**: {N}
 **Last seen**: {date}
 **Context**: {command} on task {N}
@@ -97,8 +95,7 @@ Write to `specs/errors/analysis-{DATE}.md`:
 ## Pattern Analysis
 
 ### Pattern 1: {Name}
-
-**Errors involved**: err*{N1}, err*{N2}
+**Errors involved**: err_{N1}, err_{N2}
 **Common factor**: {what they share}
 **Root cause**: {underlying issue}
 **Fix approach**: {how to address}
@@ -106,22 +103,18 @@ Write to `specs/errors/analysis-{DATE}.md`:
 ## Recommended Fix Plan
 
 ### Priority 1: {High-impact fixes}
-
 1. {Fix description} - addresses {N} errors
 2. {Fix description} - addresses {N} errors
 
 ### Priority 2: {Medium-impact fixes}
-
 ...
 
 ### Priority 3: {Low-impact/preventive}
-
 ...
 
 ## Suggested Tasks
 
 Create these tasks to address errors:
-
 1. Task: "Fix {error type}" - High priority
 2. Task: "Fix {error type}" - Medium priority
 ```
@@ -143,20 +136,15 @@ Error Analysis Complete
 
 Report: specs/errors/analysis-{DATE}.md
 
-Summary:
-- Total errors: {N}
+Errors: {N} total
 - Critical unfixed: {N}
 - High unfixed: {N}
 
-Top patterns:
-1. {Pattern}: {N} errors
-2. {Pattern}: {N} errors
-
-Created {N} fix tasks:
+Tasks created: {N}
 - Task #{N1}: {title}
 - Task #{N2}: {title}
 
-Next: /implement {N} to fix errors
+Next: /implement {N}
 ```
 
 ## Execution (Fix Mode - --fix N)
@@ -174,7 +162,6 @@ or matching the task description
 ### 3. Execute Fixes
 
 For each error:
-
 1. Analyze root cause
 2. Implement fix
 3. Update error status to "in_progress"
@@ -184,7 +171,6 @@ For each error:
 ### 4. Update errors.json
 
 Mark fixed errors:
-
 ```json
 {
   "fix_status": "fixed",
@@ -199,3 +185,26 @@ Mark fixed errors:
 git add -A
 git commit -m "errors: fix {N} errors (task {M})"
 ```
+
+## Standards Reference
+
+This command implements the multi-task creation pattern. See `.opencode/docs/reference/standards/multi-task-creation-standard.md` for the complete standard.
+
+**Compliance Level**: Partial (intentionally simplified)
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| Discovery | Yes | Error patterns from errors.json |
+| Selection | No | Automatic task creation |
+| Grouping | Partial | Groups by error type/severity |
+| Dependencies | No | Not implemented |
+| Ordering | No | Sequential creation |
+| Visualization | No | Not implemented |
+| Confirmation | No | Automatic mode |
+| State Updates | Yes | Standard task creation |
+
+**Rationale**: The `/errors` command intentionally uses automatic task creation without interactive selection. This design prioritizes quick error triage - when errors are detected, immediate task creation is more valuable than manual curation.
+
+**Gap**: No interactive selection or dependency support.
+
+**Future Enhancement**: Add `--interactive` flag for manual selection mode when desired.

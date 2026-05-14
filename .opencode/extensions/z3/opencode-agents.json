@@ -1,0 +1,16 @@
+{
+  "agent": {
+    "z3-implementation": {
+      "description": "Implement Z3 constraint solving and SMT development tasks",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/z3-implementation-agent.md}",
+      "tools": {"write":true,"edit":true,"bash":true,"read":true,"glob":true,"grep":true}
+    },
+    "z3-research": {
+      "description": "Research Z3 SMT solving and constraint development tasks",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agent/subagents/z3-research-agent.md}",
+      "tools": {"read":true,"write":true,"edit":true,"glob":true,"grep":true,"bash":true,"webfetch":true,"websearch":true}
+    }
+  }
+}
